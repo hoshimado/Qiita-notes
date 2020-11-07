@@ -1,0 +1,28 @@
+{
+  "name": "qiita-express-passport-oidc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha",
+    "dev": "cross-env DEBUG=myapp:* node-dev server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "morgan": "~1.9.1",
+    "passport": "^0.4.1",
+    "passport-openidconnect": "0.0.2"
+  },
+  "author": "hoshimado",
+  "license": "MIT",
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "node-dev": "^6.2.0"
+  }
+}
