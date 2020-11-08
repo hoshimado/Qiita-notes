@@ -89,7 +89,7 @@ OIDCを用いた認証のフローは以下のようになる。
 
 # Express＋PassportでのOIDC認証の実装例
 
-ExpressとPassportを用いて、Google（GPC）のOIDC IDプロバイダーを用いてGoogleIDを認証するRPを作る実装例を以下で説明する。
+ExpressとPassportを用いて、Google（GCP）のOIDC IDプロバイダーを用いてGoogle IDで認証するRPを作る実装例を、以下で説明する。
 
 説明に用いるサンプルコードは以下を参照。
 
@@ -225,8 +225,8 @@ OIDCの設定と、セッションの設定は、環境変数を利用して外�
 ```
 SET AUTH_URL=https://accounts.google.com/o/oauth2/v2/auth
 SET TOKEN_URL=https://www.googleapis.com/oauth2/v4/token
-SET CLIENT_ID=YOUR_OIDC_CLIENT_ID
-SET CLIENT_SECRET=YOU_OIDC_CLIENT_SECRET
+SET CLIENT_ID=Your OIDC Client ID
+SET CLIENT_SECRET=Your OIDC Client Secret
 SET COOKIE_ID=Your cookie ID name
 
 npm run dev
@@ -236,7 +236,7 @@ npm run dev
 
 PassportのOIDC向けのストラテジーである「Passport-OpenID Connect」に対してOIDC認証に必要な情報を設定して、そのストラテジーのインスタンスをPassportに設定する。
 続いて、OIDC認証のためのログインページを `/login` として設けて、そのページへのアクセスを受けたらOIDCのIDプロバイダーヘリダイレクトする。
-リダイレクト操作は「`passport.authenticate("openidconnect")`」（が返却するMiddle Ware）へ処理を任せるだけでよい。
+リダイレクト操作は「`passport.authenticate("openidconnect")`」（が返却するmiddleware）へ処理を任せるだけでよい。
 リダイレクト時にはOIDCのプロトコルに従ってクライアントIDその他を適切に渡す必要があるが、そこは「Passport-OpenID Connect」のストラテジーが全部やってくれる。
 
 具体的なサンプルコードは以下の通りで、先ほどのコードに続けて `auth_login.js` に記述する。
@@ -306,7 +306,7 @@ router.get('/login', passport.authenticate("openidconnect"));
 ## IDプロバイダでの認可の完了後のリダイレクトを受け取り、続いて認証用のIDトークンを取得する
 
 リダイレクトで受け取ったCodeを用いて、トークンエンドポイントへREST APIにてIDトークンを要求する。
-その要求APIの操作も「`passport.authenticate("openidconnect")`」（が返却するMiddle Ware）へ処理を任せるだけでよい。
+その要求APIの操作も「`passport.authenticate("openidconnect")`」（が返却するmiddleware）へ処理を任せるだけでよい。
 セキュリティ対策として、リダイレクトで受け取ったstateの検証や、取得したIDトークンのnonceの検証などをする必要があるが、そこは「Passport-OpenID Connect」のストラテジーが全部やってくれる。また、アクセストークンを用いてUserエンドポイントへREST APIにて「Aさん」のプロフィール情報の取得も行ってくれる。
 
 本サンプルでは、IDトークンの受け取りに成功したら `./loginsuccess` へリダイレクトし、失敗時には `./loginfail` へリダイレクトする設計とする。
@@ -450,8 +450,8 @@ app.use('/auth', require('./routes/auth_login'));
 ```
 SET AUTH_URL=https://accounts.google.com/o/oauth2/v2/auth
 SET TOKEN_URL=https://www.googleapis.com/oauth2/v4/token
-SET CLIENT_ID=YOUR_OIDC_CLIENT_ID
-SET CLIENT_SECRET=YOU_OIDC_CLIENT_SECRET
+SET CLIENT_ID=Your OIDC Client ID
+SET CLIENT_SECRET=Your OIDC Client Secret
 SET COOKIE_ID=Your cookie ID name
 
 npm run dev
