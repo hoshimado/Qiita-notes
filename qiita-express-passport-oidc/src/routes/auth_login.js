@@ -1,4 +1,4 @@
-var express = require('express');
+ï»¿var express = require('express');
 var router = express.Router();
 var path = require('path');
 var createError = require("http-errors");
@@ -14,36 +14,42 @@ var oidcConfig = {
   CLIENT_SECRET : process.env.CLIENT_SECRET,
   RESPONSE_TYPE : 'code',
   SCOPE : 'openid profile',
-  REDIRECT_URI_DIRECTORY : 'callback' // uTHIS_ROUTE_PATH + ‚±‚Ì’lv‚ªAOIDCƒvƒƒoƒCƒ_[‚Ö“o˜^‚µ‚½uƒR[ƒ‹ƒoƒbƒNæ‚ÌURLv‚É‚È‚é‚Ì‚Å’ˆÓB
+  REDIRECT_URI_DIRECTORY : 'callback' // ã€ŒTHIS_ROUTE_PATH + ã“ã®å€¤ã€ãŒã€OIDCãƒ—ãƒ­ãƒã‚¤ãƒ€ãƒ¼ã¸ç™»éŒ²ã—ãŸã€Œã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯å…ˆã®URLã€ã«ãªã‚‹ã®ã§æ³¨æ„ã€‚
 };
 // https://console.developers.google.com/
 
 
 
-// ƒpƒXƒ|[ƒg‚Ì‰Šúˆ—BƒZƒbƒVƒ‡ƒ“‚Ìİ’è‚È‚Ç‚ğ‚·‚éB-------------------------------------------------
+// ãƒ‘ã‚¹ãƒãƒ¼ãƒˆã®åˆæœŸå‡¦ç†ã€‚ã‚»ãƒƒã‚·ãƒ§ãƒ³ã®è¨­å®šãªã©ã‚’ã™ã‚‹ã€‚-------------------------------------------------
 var session = require("express-session");
+const { resolveCname } = require('dns');
 router.use(
   session({
-    //ƒNƒbƒL[‰ü‚´‚ñŒŸØ—pID
-    secret: process.env.COOKIE_PASSWORD,
-    //–¢‰Šú‰»‚ÌƒZƒbƒVƒ‡ƒ“‚ğ•Û‘¶‚·‚é‚©
-    saveUninitialized: false,
-    //‘¼‚É‚àsession‚Ìõ–½‚Æ‚©Ahttps‚È‚çsecure‚àİ’è‚Å‚«‚é
+    // ã‚¯ãƒƒã‚­ãƒ¼æ”¹ã–ã‚“æ¤œè¨¼ç”¨ID
+    secret: process.env.COOKIE_ID,
+    // ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆå´ã§ã‚¯ãƒƒã‚­ãƒ¼å€¤ã‚’è¦‹ã‚Œãªã„ã€æ›¸ãã‹ãˆã‚Œãªã„ã‚ˆã†ã«ã™ã‚‹ã‹å¦ã‹
+    httpOnly: true,
+    // ã‚»ãƒƒã‚·ãƒ§ãƒ³ã®æœ‰åŠ¹æœŸé™
+    maxAge: 30*1000,
+    // ãã®ä»–ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã¯ä»¥ä¸‹ã‚’å‚ç…§
+    // https://github.com/expressjs/session#sessionoptions
+    resave: false,
+    saveUninitialized: false
   })
 );
 router.use(passport.initialize());
 router.use(passport.session());
 
-// ƒ~ƒhƒ‹ƒEƒFƒA‚Å‚ ‚é passport.authenticate() ‚ª³íˆ—‚µ‚½‚Æ‚«‚É done(errorObject, userObject)‚Å
-// ’Ê’m‚³‚ê‚½î•ñ‚ğAƒZƒbƒVƒ‡ƒ“‚É•Û‘¶‚µ‚ÄA”CˆÓ‚Ìcallback’†‚ÅƒZƒbƒVƒ‡ƒ“‚©‚çæ‚èo‚¹‚é‚æ‚¤‚É‚·‚éB
-// u‰½‚ğƒZƒbƒVƒ‡ƒ“‚É•Û‘¶‚·‚×‚«‚©Hv‚ğ‘I‘ğ“I‚És‚¤‚½‚ß‚ÌƒtƒbƒNcallbackŠÖ”B
+// ãƒŸãƒ‰ãƒ«ã‚¦ã‚§ã‚¢ã§ã‚ã‚‹ passport.authenticate() ãŒæ­£å¸¸å‡¦ç†ã—ãŸã¨ãã« done(errorObject, userObject)ã§
+// é€šçŸ¥ã•ã‚ŒãŸæƒ…å ±ã‚’ã€ã‚»ãƒƒã‚·ãƒ§ãƒ³ã«ä¿å­˜ã—ã¦ã€ä»»æ„ã®callbackä¸­ã§ã‚»ãƒƒã‚·ãƒ§ãƒ³ã‹ã‚‰å–ã‚Šå‡ºã›ã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
+// ã€Œä½•ã‚’ã‚»ãƒƒã‚·ãƒ§ãƒ³ã«ä¿å­˜ã™ã¹ãã‹ï¼Ÿã€ã‚’é¸æŠçš„ã«è¡Œã†ãŸã‚ã®ãƒ•ãƒƒã‚¯callbacké–¢æ•°ã€‚
 // https://qastack.jp/programming/27637609/understanding-passport-serialize-deserialize
 // 
 passport.serializeUser(function (user, done) {
   console.log("serializeUser:" + user.profile.id);
   done(null, user);
 });
-// ã‹L‚Æ‘Î‚Æ‚È‚éAæ‚èo‚µˆ—B
+// ä¸Šè¨˜ã¨å¯¾ã¨ãªã‚‹ã€å–ã‚Šå‡ºã—å‡¦ç†ã€‚
 passport.deserializeUser(function (obj, done) {
   done(null, obj);
 });
@@ -52,7 +58,7 @@ passport.deserializeUser(function (obj, done) {
 
 
 
-// OIDC‚Ì”F‰Âè‘±‚«‚ğs‚¤‚½‚ß‚Ìƒ~ƒhƒ‹ƒEƒFƒA‚Æ‚µ‚Ä‚Ìpassport‚ğƒZƒbƒgƒAƒbƒvB-------------------------------------------------
+// OIDCã®èªå¯æ‰‹ç¶šãã‚’è¡Œã†ãŸã‚ã®ãƒŸãƒ‰ãƒ«ã‚¦ã‚§ã‚¢ã¨ã—ã¦ã®passportã‚’ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã€‚-------------------------------------------------
 var OpenidConnectStrategy = require("passport-openidconnect").Strategy;
 passport.use(
   new OpenidConnectStrategy(
@@ -77,8 +83,8 @@ passport.use(
       done
     ) {
       // [For Debug]
-      // ”FØ¬Œ÷‚µ‚½‚ç‚±‚ÌŠÖ”‚ªÀs‚³‚ê‚é
-      // ‚±‚±‚ÅID token‚ÌŒŸØ‚ğs‚¤
+      // èªè¨¼æˆåŠŸã—ãŸã‚‰ã“ã®é–¢æ•°ãŒå®Ÿè¡Œã•ã‚Œã‚‹
+      // ã“ã“ã§ID tokenã®æ¤œè¨¼ã‚’è¡Œã†
       console.log("issuer: ", issuer);
       console.log("sub: ", sub);
       console.log("profile: ", profile);
@@ -107,13 +113,13 @@ passport.use(
 
 
 
-// ƒƒOƒCƒ“—v‹‚ğó‚¯‚ÄAOIDC‚Ì”F‰ÂƒvƒƒoƒCƒ_[‚ÖƒŠƒ_ƒCƒŒƒNƒgB-------------------------------------------------
+// ãƒ­ã‚°ã‚¤ãƒ³è¦æ±‚ã‚’å—ã‘ã¦ã€OIDCã®èªå¯ãƒ—ãƒ­ãƒã‚¤ãƒ€ãƒ¼ã¸ãƒªãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆã€‚-------------------------------------------------
 router.get('/login', passport.authenticate("openidconnect"));
 
 
 
-// OIDC‚Ì”F‰ÂƒvƒƒoƒCƒ_[‚©‚ç‚ÌƒŠƒ_ƒCƒŒƒNƒg‚ğó‚¯‚éB---------------------------------------------------------
-// ¦‚±‚ÌApassport.authenticate() ‚ÍA“n‚³‚ê‚Ä‚­‚éƒNƒGƒŠ[‚É‚æ‚Á‚Ä“®ì‚ğ•ÏX‚·‚éd—lB
+// OIDCã®èªå¯ãƒ—ãƒ­ãƒã‚¤ãƒ€ãƒ¼ã‹ã‚‰ã®ãƒªãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆã‚’å—ã‘ã‚‹ã€‚---------------------------------------------------------
+// â€»ã“ã®æ™‚ã€passport.authenticate() ã¯ã€æ¸¡ã•ã‚Œã¦ãã‚‹ã‚¯ã‚¨ãƒªãƒ¼ã«ã‚ˆã£ã¦å‹•ä½œã‚’å¤‰æ›´ã™ã‚‹ä»•æ§˜ã€‚
 router.get(
   '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
   passport.authenticate("openidconnect", {
@@ -121,7 +127,7 @@ router.get(
   }),
   function (req, res) {
     // Successful authentication, redirect home.
-    console.log("”F‰ÂƒR[ƒh:" + req.query.code);
+    console.log("èªå¯ã‚³ãƒ¼ãƒ‰:" + req.query.code);
     req.session.user = req.session.passport.user.displayName;
     console.log(req.session);
     res.redirect("loginsuccess");
@@ -132,9 +138,9 @@ router.get(
 
 
 
-// THIS_ROUTE_PATH (='/auth/') ”z‰º‚Ìƒtƒ@ƒCƒ‹‚Ö‚ÌƒAƒNƒZƒX—v‹‚ÌAã‹Lilogin/callbackjˆÈŠO‚Ìˆ—‚ğ‹LÚ‚·‚éB---------------
+// THIS_ROUTE_PATH (='/auth/') é…ä¸‹ã®ãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®ã‚¢ã‚¯ã‚»ã‚¹è¦æ±‚ã®ã€ä¸Šè¨˜ï¼ˆlogin/callbackï¼‰ä»¥å¤–ã®å‡¦ç†ã‚’è¨˜è¼‰ã™ã‚‹ã€‚---------------
 
-// ƒƒOƒCƒ“‚É¸”s‚µ‚½‚Æ‚«‚É•\¦‚³‚ê‚éƒy[ƒW
+// ãƒ­ã‚°ã‚¤ãƒ³ã«å¤±æ•—ã—ãŸã¨ãã«è¡¨ç¤ºã•ã‚Œã‚‹ãƒšãƒ¼ã‚¸
 router.get('loginfail', function (req, res, next) {
   var htmlStr = '<html lang="ja">';
   htmlStr += '<head>';
@@ -142,7 +148,7 @@ router.get('loginfail', function (req, res, next) {
   htmlStr += '<title>login success.</title>';
   htmlStr += '</head>'
   htmlStr += '<body>';
-  htmlStr += 'ƒƒOƒCƒ“‚É¸”s‚µ‚Ü‚µ‚½B';
+  htmlStr += 'ãƒ­ã‚°ã‚¤ãƒ³ã«å¤±æ•—ã—ã¾ã—ãŸã€‚';
   htmlStr += '</body>';
   htmlStr += '</html>';
 
@@ -152,7 +158,7 @@ router.get('loginfail', function (req, res, next) {
 });
 
 
-// ƒƒOƒCƒ“‚É¬Œ÷‚µ‚½‚Æ‚«‚É•\¦‚³‚ê‚éƒy[ƒW
+// ãƒ­ã‚°ã‚¤ãƒ³ã«æˆåŠŸã—ãŸã¨ãã«è¡¨ç¤ºã•ã‚Œã‚‹ãƒšãƒ¼ã‚¸
 router.get('/loginsuccess', function(req, res, next) {
   console.log("----"+THIS_ROUTE_PATH+"login----");
   console.log(req.session.passport);
@@ -162,7 +168,7 @@ router.get('/loginsuccess', function(req, res, next) {
   htmlStr += '<title>login success.</title>';
   htmlStr += '</head>'
   htmlStr += '<body>';
-  htmlStr += 'ƒƒOƒCƒ“‚É¬Œ÷‚µ‚Ü‚µ‚½Bas ' + req.session.passport.user.profile.displayName;
+  htmlStr += 'ãƒ­ã‚°ã‚¤ãƒ³ã«æˆåŠŸã—ã¾ã—ãŸã€‚as ' + req.session.passport.user.profile.displayName;
   htmlStr += '</body>';
   htmlStr += '</html>';
 
@@ -174,31 +180,31 @@ router.get('/loginsuccess', function(req, res, next) {
 /*
 { user:
    { profile:
-      { id: 'IDƒg[ƒNƒ“‚ÉŠÜ‚Ü‚ê‚éID‚Æ“¯ˆê',
-        displayName: 'IDƒg[ƒNƒ“‚É•R‚Ã‚¢‚Ä‚¢‚éƒ†[ƒU[–¼',
+      { id: 'IDãƒˆãƒ¼ã‚¯ãƒ³ã«å«ã¾ã‚Œã‚‹IDã¨åŒä¸€',
+        displayName: 'IDãƒˆãƒ¼ã‚¯ãƒ³ã«ç´ã¥ã„ã¦ã„ã‚‹ãƒ¦ãƒ¼ã‚¶ãƒ¼å',
         name: [Object],
         _raw: [Object],
      accessToken:
-      { OIDC‚Ìƒg[ƒNƒ“ƒGƒ“ƒhƒ|ƒCƒ“ƒg‚©‚ç•¥‚¢o‚³‚ê‚½AOAuth2.0‚ÌƒAƒNƒZƒXƒg[ƒNƒ“ },
+      { OIDCã®ãƒˆãƒ¼ã‚¯ãƒ³ã‚¨ãƒ³ãƒ‰ãƒã‚¤ãƒ³ãƒˆã‹ã‚‰æ‰•ã„å‡ºã•ã‚ŒãŸã€OAuth2.0ã®ã‚¢ã‚¯ã‚»ã‚¹ãƒˆãƒ¼ã‚¯ãƒ³ },
      idToken:
-      { IDƒg[ƒNƒ“iJWTj }
+      { IDãƒˆãƒ¼ã‚¯ãƒ³ï¼ˆJWTï¼‰ }
       }
    }
 }
 */
 
 
-// ã‹LˆÈŠO‚ÌƒAƒNƒZƒX‚É‘Î‚·‚é‰“š
-// uget()v‚Å‚Í‚È‚­uuse()v‚Å‚ ‚é‚±‚Æ‚É’ˆÓB
+// ä¸Šè¨˜ä»¥å¤–ã®ã‚¢ã‚¯ã‚»ã‚¹ã«å¯¾ã™ã‚‹å¿œç­”
+// ã€Œget()ã€ã§ã¯ãªãã€Œuse()ã€ã§ã‚ã‚‹ã“ã¨ã«æ³¨æ„ã€‚
 // ref. https://stackoverflow.com/questions/15601703/difference-between-app-use-and-app-get-in-express-js
 router.use('/', function(req, res, next) {
-  console.log('”CˆÓ‚Ì'+THIS_ROUTE_PATH+'”z‰º‚Ö‚ÌƒAƒNƒZƒX');
+  console.log('ä»»æ„ã®'+THIS_ROUTE_PATH+'é…ä¸‹ã¸ã®ã‚¢ã‚¯ã‚»ã‚¹');
   if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.profile){
-    console.log('OIDC‚ÅƒƒOƒCƒ“‚µ‚½ƒZƒbƒVƒ‡ƒ“‚ğæ“¾‚Å‚«‚½')
+    console.log('OIDCã§ãƒ­ã‚°ã‚¤ãƒ³ã—ãŸã‚»ãƒƒã‚·ãƒ§ãƒ³ã‚’å–å¾—ã§ããŸ')
     console.log(path.join(__dirname, '../auth'));
     next();
   }else{
-    console.log('ƒƒOƒCƒ“‚µ‚Ä‚È‚¢ƒZƒbƒVƒ‡ƒ“æ‚ê‚È‚¢')
+    console.log('ãƒ­ã‚°ã‚¤ãƒ³ã—ã¦ãªã„ï¼ã‚»ãƒƒã‚·ãƒ§ãƒ³å–ã‚Œãªã„')
     next(createError(401, 'Please login to view this page.'));
   }
 }, express.static(path.join(__dirname, '../auth')) );
@@ -213,6 +219,7 @@ router.use(function (req, res, next) {
 
 
 
+module.exports = router;
 
 
 

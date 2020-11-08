@@ -14,6 +14,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/auth', require('./routes/auth_login')); // 追記
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 

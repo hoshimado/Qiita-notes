@@ -130,10 +130,16 @@ https://qiita.com/hoshimado/items/a009a58a6986d8826f0d
 
 ## 前準備として、passportの初期化処理と、利用するセッションの初期化処理を行う
 
-PassportとOpenID Connect用のストラテジーをインストールする。
+PassportとOIDC用のストラテジーをインストールする。
 
 ```
 npm i   passport passport-openidconnect --save
+```
+
+OIDCストラテジーではセッションを利用する（OIDCのIDプロバイダーへの送信値と返却値の検証のため値の保持が必要）ので、以下で`express-session`をインストールする（`express-session`はデフォルトではメモリストア利用であって「メモリリークしやすいので本番への利用は他のストアを利用すること」とあるが、今回は開発目的なのでデフォルトのまま利用する）。
+
+```
+npm i express-session --save
 ```
 
 OIDC認証で保護するフォルダとして `auth` を作成して、配下に `index.html` をお試しとして配置する。
@@ -184,11 +190,16 @@ var oidcConfig = {
 var session = require("express-session");
 router.use(
   session({
-    //クッキー改ざん検証用ID
-    secret: process.env.COOKIE_PASSWORD,
-    //未初期化のセッションを保存するか
-    saveUninitialized: false,
-    //他にもsessionの寿命とか、httpsならsecureも設定できる
+    // クッキー改ざん検証用ID
+    secret: process.env.COOKIE_ID,
+    // クライアント側でクッキー値を見れない、書きかえれないようにするか否か
+    httpOnly: true,
+    // セッションの有効期限
+    maxAge: 30*1000,
+    // その他のオプションは以下を参照
+    // https://github.com/expressjs/session#sessionoptions
+    resave: false,
+    saveUninitialized: false
   })
 );
 router.use(passport.initialize());
@@ -216,7 +227,7 @@ SET AUTH_URL=https://accounts.google.com/o/oauth2/v2/auth
 SET TOKEN_URL=https://www.googleapis.com/oauth2/v4/token
 SET CLIENT_ID=YOUR_OIDC_CLIENT_ID
 SET CLIENT_SECRET=YOU_OIDC_CLIENT_SECRET
-SET COOKIE_PASSWORD=YOUR_PASSWORD
+SET COOKIE_ID=Your cookie ID name
 
 npm run dev
 ```
@@ -411,7 +422,44 @@ router.use('/', function(req, res, next) {
 router.use(function (req, res, next) {
   next(createError(404));
 });
+
+
+// ルーターとしてのMiddleWareをエクスポート
+module.exports = router;
 ```
+
+## authパスへのアクセスをapp.jsとindex.htmlに追記して動作検証する
+
+`public\index.html`に次の1行を追加して、OIDC認証へのログインリンクと認証制御下のファイルへのリンクを貼る。
+
+```
+  <a href="./auth/login" target="_blank">OIDC認証</a>
+  <br>
+  <a href="./auth/" target="_blank">OIDC認証が必要なパス配下へのリンク</a>
+
+```
+
+`src\app.js`ファイルに次の1行を追記して、`/auth`へのアクセス時のルーティングを`auth_login.js`に任せる。
+
+```
+app.use('/auth', require('./routes/auth_login'));
+```
+
+以上の設定を行ったら、先に述べたように各種の環境変数を設定して、たとえば以下のようにしてHTTPサーバーを立ち上げる。
+
+```
+SET AUTH_URL=https://accounts.google.com/o/oauth2/v2/auth
+SET TOKEN_URL=https://www.googleapis.com/oauth2/v4/token
+SET CLIENT_ID=YOUR_OIDC_CLIENT_ID
+SET CLIENT_SECRET=YOU_OIDC_CLIENT_SECRET
+SET COOKIE_ID=Your cookie ID name
+
+npm run dev
+```
+
+`http://localhost:3000/` へアクセスし、そのままの状態で「OIDC認証が必要なパス配下へのリンク」へジャンプしても「UnauthorizedError」応答になることを確認する。
+
+続いて「OIDC認証」へジャンプして、OIDCログインの画面が表示されることを確認し、ログイン後にもう一度「OIDC認証が必要なパス配下へのリンク」へジャンプすると、今度はページが表示されることを確認する。
 
 以上ー。
 
