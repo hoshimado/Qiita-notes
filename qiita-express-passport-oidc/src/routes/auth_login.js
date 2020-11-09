@@ -6,7 +6,7 @@ var createError = require("http-errors");
 
 var passport = require("passport");
 
-var THIS_ROUTE_PATH = 'auth/';
+var THIS_ROUTE_PATH = 'auth';
 var oidcConfig = {
   AUTH_URL : process.env.AUTH_URL,
   TOKEN_URL : process.env.TOKEN_URL,
@@ -45,6 +45,10 @@ router.use(passport.session());
 // 「何をセッションに保存すべきか？」を選択的に行うためのフックcallback関数。
 // https://qastack.jp/programming/27637609/understanding-passport-serialize-deserialize
 // 
+// ※APIオンリーの場合はセッションを無効にするという手も提示されているが、、、login画面へのリダイレクトでは
+//   少なくとも認証された情報の取得が必要なので、ここは要るはず。
+//   認可エンドポイントからcallbackされるときのcodeなどをそのまま使うなら、不要かもしれないが。。。
+//   http://www.passportjs.org/docs/oauth2-api/ ＞ Protect Endpoints
 passport.serializeUser(function (user, done) {
   console.log("serializeUser:" + user.profile.id);
   done(null, user);
@@ -69,7 +73,7 @@ passport.use(
       userInfoURL:  "https://openidconnect.googleapis.com/v1/userinfo", // https://developers.google.com/identity/protocols/oauth2/openid-connect#discovery
       clientID:     oidcConfig.CLIENT_ID,
       clientSecret: oidcConfig.CLIENT_SECRET,
-      callbackURL:  THIS_ROUTE_PATH + oidcConfig.REDIRECT_URI_DIRECTORY,
+      callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
       scope: ["openid", "profile"],
     },
     function (
@@ -138,7 +142,7 @@ router.get(
 
 
 
-// THIS_ROUTE_PATH (='/auth/') 配下のファイルへのアクセス要求の、上記（login/callback）以外の処理を記載する。---------------
+// THIS_ROUTE_PATH (='../auth') 配下のファイルへのアクセス要求の、上記（login/callback）以外の処理を記載する。---------------
 
 // ログインに失敗したときに表示されるページ
 router.get('loginfail', function (req, res, next) {
@@ -201,13 +205,13 @@ router.use('/', function(req, res, next) {
   console.log('任意の'+THIS_ROUTE_PATH+'配下へのアクセス');
   if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.profile){
     console.log('OIDCでログインしたセッションを取得できた')
-    console.log(path.join(__dirname, '../auth'));
+    console.log(path.join(__dirname, '../' + THIS_ROUTE_PATH));
     next();
   }else{
     console.log('ログインしてない＝セッション取れない')
     next(createError(401, 'Please login to view this page.'));
   }
-}, express.static(path.join(__dirname, '../auth')) );
+}, express.static(path.join(__dirname, '../' + THIS_ROUTE_PATH)) );
 
 
 
