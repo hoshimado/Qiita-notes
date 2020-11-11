@@ -22,7 +22,6 @@ var oidcConfig = {
 
 // パスポートの初期処理。セッションの設定などをする。-------------------------------------------------
 var session = require("express-session");
-const { resolveCname } = require('dns');
 router.use(
   session({
     // クッキー改ざん検証用ID
