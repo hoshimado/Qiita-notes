@@ -25,6 +25,8 @@ RSAの鍵長は4096かそれ以上が一般に推奨されるが、
 
 本記事で用いるサンプルコードは、以下へ全体が格納してある。
 
+https://github.com/hoshimado/qiita-notes/tree/main/qiita-jwt-auth
+
 
 
 # JWTの発行（署名）に必要な秘密鍵を準備する
