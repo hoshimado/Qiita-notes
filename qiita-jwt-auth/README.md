@@ -14,7 +14,8 @@ ref. https://github.com/auth0/node-jsonwebtoken#readme
 
 本記事では、JWT発行の際に必要となる秘密鍵の準備方法をメインに、作成した鍵ペアで実際にJWTを生成し、検証する様を説明する。
 
-鍵ペアの生成はWindows10上で実施するものとする。一部WSLを利用する。
+鍵ペアの生成はWindows10上で実施するものとする。一部WSL(=
+Windows Subsystem for Linux)を利用する。※WSLのWindows10環境への導入は、例えば少し古いが稚記事の「[§1. Ubuntu on WSL のセットアップ](https://qiita.com/hoshimado/items/7592cee28c1bde545b78#1-ubuntu-on-wsl-%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97)」などを参照（§2以降は、Dockerに関するものなので不要）。
 
 公開鍵暗号のアルゴリズムにはRSAを用いる（他にElGamal等がある）。
 RSAの鍵長は4096かそれ以上が一般に推奨されるが、
