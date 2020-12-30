@@ -2,21 +2,19 @@ Subject: JWTを用いた認証方法（JWT発行と検証方法）
 
 # 概要
 
-Webアプリにおいて、クライアント側のSPAからのAPIの認証にJWTを利用する場合を考える。
-サーバー側でのJWT発行と、APIに含められてきたJWTを検証する流れを説明する。
+Webアプリにおいて、クライアント側のSPA(=Single Page Application)からのAPIの認証に、JWTを利用する場合を考える。サーバー側でのJWT発行と、APIに含めれて送られてきたJWTを検証する方法を説明する。
 
 言語はNode.jsとする。
 
-クライアント側でJWTの有効性を検証することを想定し、
-つまりクライアント側で復号用の公開鍵を保持することを想定し、
-JWTはRSAで署名するものとする。
+クライアント側でJWTの有効性を検証する、つまりクライアント側で復号用の公開鍵を保持することを想定し、JWTはRSAで署名するものとする（クライアント側での検証をしない場合は共通鍵で署名してもよいが、割愛する）。
 
-（クライアント側での検証をしない場合は共通鍵で署名してもよいが、割愛する）
+JWTの発行と検証そのものは、OSSライブラリ「jsonwebtoken」を用いて簡単にできる。
 
-JWT発行の際に必要となる秘密鍵の準備方法が本記事の説明のメインとなる。
-なぜなら、JWTの発行と検証は、OSSライブラリ「jsonwebtoken」を用いて簡単にできるから。
+ref. https://github.com/auth0/node-jsonwebtoken#readme
 
-なお、Windows10上で実施するものとする。一部WSLを利用する。
+本記事では、JWT発行の際に必要となる秘密鍵の準備方法をメインに、作成した鍵ペアで実際にJWTを生成し、検証する様を説明する。
+
+鍵ペアの生成はWindows10上で実施するものとする。一部WSLを利用する。
 
 公開鍵暗号のアルゴリズムにはRSAを用いる（他にElGamal等がある）。
 RSAの鍵長は4096かそれ以上が一般に推奨されるが、
@@ -45,9 +43,11 @@ Node.jsのライブラリ「jsonwebtoken」において署名に秘密鍵（と�
 ref. https://github.com/auth0/node-jsonwebtoken
 
 
-秘密鍵の生成にはssh-keygen コマンドを利用する。
-これは、SSHログイン向けPRM形式のRSA鍵ペアを生成するコマンド。
-ちょうどよいので流用する。
+秘密鍵の生成には、SSHログイン向けPEM形式のRSA鍵ペアを生成するコマンドであるssh-keygen コマンドを利用する（SSHログイン向けであるが、RSA鍵ペア自体はSSH独自と言うわけではない）。
+
+なお、鍵のフォーマットにはDER形式とPEM形式があり、これらは相互に変換は可能（ほかに、OpenSSH形式、もあるが割愛）。
+
+ref. https://qiita.com/kunichiko/items/12cbccaadcbf41c72735
 
 Windows10マシンの場合は、WSLを利用する。
 WSLにはOpenSSHコマンドが入っている（バージョンはWSL環境に依存）。
@@ -56,9 +56,7 @@ $ ssh -H
 OpenSSH_7.2p2 Ubuntu-4ubuntu2.4, OpenSSL 1.0.2g  1 Mar 2016
 ```
 
-なお、ssh-keygenは、OpenSSHに内包されるツールであり、
-OpenSSHの7.8以上では、デフォルトフォーマットが（OpenSS**L**の）PEM形式ではなく、
-OpenSSH形式に変更されている。
+なお、ssh-keygenは、OpenSSHに内包されるツールであり、OpenSSHの7.8以上では、デフォルトフォーマットが（OpenSS**L**の）PEM形式ではなく、OpenSSH形式に変更されている。
 その場合は、`-m PEM` を指定する必要がある。
 
 ref. https://dev.classmethod.jp/articles/openssh78_potentially_incompatible_changes/
@@ -67,17 +65,11 @@ ref. https://dev.classmethod.jp/articles/openssh78_potentially_incompatible_chan
 
 
 ssh-keygenコマンドで作成した鍵ペアのうち、
-秘密鍵の「`id_rsa`」はPEM形式なのでそのまま利用できるが、
-公開鍵の「`id_rsa.pub`」はOpenSSHの独自形式のファイルとなる。
+秘密鍵の「`id_rsa`」はPEM形式なのでそのまま利用できるが、公開鍵の「`id_rsa.pub`」はOpenSSHの独自形式のファイルとなる。
 この独自形式は「`ssh-keygen -f id_rsa.pub -e -m pem`」とすることでPEM形式に変換可能。
 
-なお、鍵のフォーマットにはDER形式とPEM形式があり、これらは相互に変換は可能。
 
-ref. https://qiita.com/kunichiko/items/12cbccaadcbf41c72735
-
-
-JWT生成時には、これらの作成済みの秘密鍵と公開鍵を読み込む必要があるが、
-ファイルのままだとGit管理との整合が面倒なので、環境変数から文字列として読み込むのが望ましい。
+JWT生成時には、これらの作成済みの秘密鍵と公開鍵を読み込む必要があるが、ファイルのままだとGit管理との整合が面倒なので、環境変数から文字列として読み込むのが望ましい。
 この場合、ファイルをBase64変換した「1行のテキスト」として扱うことで、実現できる。
 
 > As mentioned in this comment, there are other libraries that 
@@ -299,17 +291,14 @@ node verifyJwt.js   eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzYW1wbGUucWl
 }
 ```
 
-なお、上記に記載した秘密鍵と公開鍵のペアは、本記事ように作成したものなので、これを流用しても何か悪さができるわけでは無いのであしからず（WSL環境が使えない、等の理由で鍵ペア生成ができない環境で試したい場合は、本鍵ペアを流用してもらっても構わない）。
+なお、上記に記載した秘密鍵と公開鍵のペアは、本記事向けに専用に作成したものなので、これを流用しても何か悪さができるわけでは無いのであしからず（WSL環境が使えない、等の理由で鍵ペア生成ができない環境で試したい場合は、本鍵ペアを流用してもらっても構わない）。
 
 また、本記事では簡単のためにWSL環境のssh-keygenコマンドを利用したが、SSH for Windows等と一緒に提供されるssh-keygenコマンドを使っても、もちろん構わない。
 
 # エラーについて
 
-jsonwebtokenが「`PEM_do_header:bad password read`」のような
-エラーを吐く場合がある。
-これは、公開鍵（か秘密鍵）のフォーマット不適切、もしくは、
-パスフレーズを設定した鍵なのに、パスフレーズのインプットが無い、
-場合に起きるので、PEM形式になっているか？パスフレーズを設定したか？を確認のこと。
+jsonwebtokenが「`PEM_do_header:bad password read`」のようなエラーを吐く場合がある。
+これは、公開鍵（か秘密鍵）のフォーマット不適切、もしくは、パスフレーズを設定した鍵なのに、パスフレーズのインプットが無い、場合に起きるので、PEM形式になっているか？パスフレーズを設定したか？を確認のすること。
 
 # 記事中に記載以外の参考URL
 
