@@ -39,6 +39,11 @@ export default {
                 reader.readAsDataURL(filePath);
                 // ここまでで「resolve(e.target.result)」でbase64化された画像ファイルデータが返却される。
                 // https://fujiten3.hatenablog.com/entry/2019/07/10/133132
+                //
+                // input type=fileとFileReader()の使い方は↓当たりも参照。
+                // ここではreadAsDataURL()でBase64モードで読み込んだが、
+                // テキストデータならreadAsText()でもよい。
+                // https://into-the-program.com/javascript-read-the-file/
             })
         },  
         selectedFile : function (e) {
