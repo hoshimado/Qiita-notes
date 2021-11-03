@@ -1,0 +1,28 @@
+{
+  "name": "qiita-express-passport-oidc-gcp-azure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "express-session": "^1.17.2",
+    "morgan": "~1.9.1",
+    "passport": "^0.5.0",
+    "passport-openidconnect": "0.0.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "node-dev": "^7.1.0"
+  },
+  "scripts": {
+    "dev": "cross-env DEBUG=myapp:* node-dev server.js",
+    "start": "node server.js"
+  },
+  "author": "hoshimado",
+  "license": "MIT"
+}
