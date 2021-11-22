@@ -14,8 +14,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.use('/auth-gcp',   require('./routes/auth_login_gcp'));   // 追記 for Google
 app.use('/auth-azure', require('./routes/auth_login_azure')); // 追記 for Azure
+app.use('/auth-yahoo', require('./routes/auth_login_yahoo')); // 追記 for Yahoo
+
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

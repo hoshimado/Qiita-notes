@@ -1,0 +1,99 @@
+﻿とりあえず、GoogleとAzureのそれぞれのOIDCでログインできる試行サイトは出来た。
+
+ただし、それぞれのログインボタンを推された瞬間に
+PassportのStrategyをGoogle/Azureで切替て、
+それぞれのOIDC認証が終了するまでに、他のアクセスが
+来ないことが前提となるので、本当に試行サイト。
+
+Passport.jsで同Strategyを別設定で複数持つには
+どうすればよいんだろう？
+あと、セッション管理よく分かってない。。。
+
+あくまで、「こう言う設定をIdP側にして、Passport.jsでｘｘｘすれば出来た」
+という検証まで。
+
+-------------------------------------
+qiita-express-passport-oidc-gcp-azure
+|   app.js
++---auth-azure
+|       index.html
++---auth-gcp
+|       index.html
++---public
+|       index.html
+\---routes
+        auth_login_azure.js
+        auth_login_gcp.js
+        index.js
+        users.js
+
+------------------------------------
+
+▼GCP側▼
+GCPにアクセスしてログイン
+https://cloud.google.com/
+
+右上の「コンソール」を押下。
+
+左ペインから「APIとサービス」を押下。
+
+→OAuth2.0認可によるAPIアクセス情報の管理ページ
+
+「プロジェクト」単位で
+「OAuth同意画面」を作ったうえで、
+「認証情報」にて「認可を与えるクライアントID（＝OAuth2.0クライアントID）」を作成する。
+
+OAuth2.0認可い必要な「クライアントID」と「クライアントシークレット」が
+払い出される。
+
+承認済みリダイレクトURIに必要な値を設定する（どこで受け取るか？）
+http://localhost:3000/auth-gcp/callback
+
+
+
+------------------------------------
+
+▼Azure側▼
+
+Azureポータルにログイン
+https://portal.azure.com/
+
+ホーム＞アプリの登録
+
+名前：
+web-client-express-oidc-msid
+
+アカウントの種類：個人用のMicrosoftアカウントのみ
+
+リダイレクトURI：※このタイミングでは「空欄のまま」とする。
+
+https://docs.microsoft.com/ja-jp/azure/active-directory/develop/quickstart-register-app
+> アプリの登録の [概要] ペインが表示されます。
+>  [アプリケーション (クライアント) ID] の値を確認します。 
+> この値は、"クライアント ID" とも呼ばれ、
+> Microsoft ID プラットフォーム内のアプリケーションを一意に識別します。
+>
+→これがOIDCの「クライアントID」となる。
+
+左ペイン＞認証＞プラットフォームの追加＞Webアプリケーション＞Web
+http://localhost:3000/auth-azure/callback
+
+
+
+（確認するときは
+　配下に↑で登録した名称があることを確認する）
+
+左ペイン＞証明書とシークレット＞新しいクライアントシークレット
+→これがOIDCの「クライアントシークレット」となる。
+　※ここで「シークレットID」ではなくて「値」の方が「クライアントシークレット」
+　　なので、注意すること。
+　　https://docs.microsoft.com/en-us/answers/questions/370508/getting-34invalid-client-secret-is-provided34-erro.html
+
+
+
+
+
+
+
+
+

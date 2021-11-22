@@ -8,20 +8,20 @@ var passport = require("passport");
 
 
 /**
- * 下記のOIDC連携ログインの情報は、GCPは以下のコンソールから設定と取得を行う。
- * https://cloud.google.com/
+ * 下記のOIDC連携ログインの情報は、Yahooは以下のコンソールから設定と取得を行う。
+ * https://e.developer.yahoo.co.jp/dashboard/
  * 
- * ※「ほしまど」のGoogleアカウントで管理していることに留意。
+ * ※「ほしまど」のYahooアカウントで管理していることに留意。
  */
-var THIS_ROUTE_PATH = 'auth-gcp';
+var THIS_ROUTE_PATH = 'auth-yahoo';
 var oidcConfig = {
-  CLIENT_ID : process.env.GCP_CLIENT_ID,
-  CLIENT_SECRET : process.env.GCP_CLIENT_SECRET,
+  CLIENT_ID : process.env.YAHOO_CLIENT_ID,
+  CLIENT_SECRET : process.env.YAHOO_CLIENT_SECRET,
   RESPONSE_TYPE : 'code', // Authentication Flow、を指定
   SCOPE : 'openid profile',
   REDIRECT_URI_DIRECTORY : 'callback' // 「THIS_ROUTE_PATH + この値」が、OIDCプロバイダーへ登録した「コールバック先のURL」になるので注意。
 };
-// https://console.developers.google.com/
+// https://developer.yahoo.co.jp/yconnect/v2/
 
 
 
@@ -68,20 +68,23 @@ passport.deserializeUser(function (obj, done) {
 
 // OIDCの認可手続きを行うためのミドルウェアとしてのpassportをセットアップ。-------------------------------------------------
 var OpenidConnectStrategy = require("passport-openidconnect").Strategy;
-var Instance4GoogleOIDC = new OpenidConnectStrategy(
+var Instance4YahooOIDC = new OpenidConnectStrategy(
     {
-      issuer: "https://accounts.google.com",
-      authorizationURL: "https://accounts.google.com/o/oauth2/v2/auth",
-      tokenURL:         "https://oauth2.googleapis.com/token",
-      userInfoURL:  "https://openidconnect.googleapis.com/v1/userinfo",
+      issuer: "https://auth.login.yahoo.co.jp/yconnect/v2",
+      authorizationURL: "https://auth.login.yahoo.co.jp/yconnect/v2/authorization",
+      tokenURL:         "https://auth.login.yahoo.co.jp/yconnect/v2/token",
+      userInfoURL:  "https://userinfo.yahooapis.jp/yconnect/v2/attribute",
       clientID:     oidcConfig.CLIENT_ID,
       clientSecret: oidcConfig.CLIENT_SECRET,
       callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
-      scope: ["openid", "profile"]
+      scope: [] 
+      // ↑は空白とする。Yahooの場合は、「"openid", "profile"」は「常に暗に指定されている扱い」の様子。
+      // 他の（GoogleやAzure、OneLogin）のように明示亭に指定すると「AuthorizationError: scope value is duplicate.」
+      // でエラーする。
       /**
        * 公開情報（EndPointとか）は以下を参照
-       * https://developers.google.com/identity/protocols/oauth2/openid-connect
-       * https://accounts.google.com/.well-known/openid-configuration
+       * https://developer.yahoo.co.jp/yconnect/v2/authorization_code/configuration.html
+       * https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
        */
     },
     function (
@@ -97,10 +100,10 @@ var Instance4GoogleOIDC = new OpenidConnectStrategy(
       // [For Debug]
       // 認証成功したらこの関数が実行される
       // ここでID tokenの検証を行う
-      console.log("===[Success Authenticate by GCP OIDC]===");
+      console.log("===[Success Authenticate by Yahoo OIDC]===");
       console.log("issuer: ", issuer);
       console.log("sub: ", sub);
-      console.log("profile: ", profile);
+      console.log("profile: ", profile); // Yahooの場合は、「displayName」は定義されていない（ように見える。個々人の設定かもしれないが）
       console.log("jwtClaims: ", jwtClaims);
       console.log("accessToken: ", accessToken);
       console.log("refreshToken: ", refreshToken);
@@ -129,7 +132,7 @@ var Instance4GoogleOIDC = new OpenidConnectStrategy(
 router.get('/login', function (req, res, next) {
     // 利用する「認証ストラテジー」を指定したうえで、「OIDC」のストラテジーへ進む。
     // FixMe: 複数のリクエストが同時に来ることは想定していないので注意。（※サンプルアプリなので）
-    passport.use( Instance4GoogleOIDC );
+    passport.use( Instance4YahooOIDC );
     next();
 }, passport.authenticate("openidconnect"));
 

@@ -9,9 +9,9 @@ var passport = require("passport");
 
 /**
  * 下記のOIDC連携ログインの情報は、GCPは以下のコンソールから設定と取得を行う。
- * https://cloud.google.com/
+ * https://portal.azure.com/
  * 
- * ※「ほしまど」のGoogleアカウントで管理していることに留意。
+ * ※「ほしまど」のAzureアカウントで管理していることに留意。
  */
 var THIS_ROUTE_PATH = 'auth-azure';
 var oidcConfig = {
@@ -21,7 +21,7 @@ var oidcConfig = {
   SCOPE : 'openid profile',
   REDIRECT_URI_DIRECTORY : 'callback' // 「THIS_ROUTE_PATH + この値」が、OIDCプロバイダーへ登録した「コールバック先のURL」になるので注意。
 };
-// https://console.developers.google.com/
+// https://docs.microsoft.com/ja-jp/azure/active-directory/develop/quickstart-register-app
 
 
 
@@ -97,6 +97,7 @@ var Instance4AzureOIDC = new OpenidConnectStrategy(
       // [For Debug]
       // 認証成功したらこの関数が実行される
       // ここでID tokenの検証を行う
+      console.log("===[Success Authenticate by Azure OIDC]===");
       console.log("issuer: ", issuer);
       console.log("sub: ", sub);
       console.log("profile: ", profile);
@@ -126,6 +127,8 @@ var Instance4AzureOIDC = new OpenidConnectStrategy(
 
 // ログイン要求を受けて、OIDCの認可プロバイダーへリダイレクト。-------------------------------------------------
 router.get('/login', function (req, res, next) {
+    // 利用する「認証ストラテジー」を指定したうえで、「OIDC」のストラテジーへ進む。
+    // FixMe: 複数のリクエストが同時に来ることは想定していないので注意。（※サンプルアプリなので）
     passport.use( Instance4AzureOIDC );
     next();
 }, passport.authenticate("openidconnect"));
