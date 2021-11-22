@@ -1,9 +1,13 @@
-﻿とりあえず、GoogleとAzureのそれぞれのOIDCでログインできる試行サイトは出来た。
+﻿setting.▼.ListMarkup=true
+
+
+▼概要▼
+とりあえず、GoogleとAzure、そしてYahooのそれぞれのOIDCでログインできる試行サイトは出来た。
 
 ただし、それぞれのログインボタンを推された瞬間に
-PassportのStrategyをGoogle/Azureで切替て、
+PassportのStrategyをGoogle/Azure/Yahooで切替て、
 それぞれのOIDC認証が終了するまでに、他のアクセスが
-来ないことが前提となるので、本当に試行サイト。
+【来ないことが前提】となるので、本当に試行サイト。
 
 Passport.jsで同Strategyを別設定で複数持つには
 どうすればよいんだろう？
@@ -19,11 +23,14 @@ qiita-express-passport-oidc-gcp-azure
 |       index.html
 +---auth-gcp
 |       index.html
++---auth-yahoo
+|       index.html
 +---public
 |       index.html
 \---routes
         auth_login_azure.js
         auth_login_gcp.js
+        auth_login_yahoo.js
         index.js
         users.js
 
@@ -90,6 +97,72 @@ http://localhost:3000/auth-azure/callback
 　　https://docs.microsoft.com/en-us/answers/questions/370508/getting-34invalid-client-secret-is-provided34-erro.html
 
 
+------------------------------------
+
+▼Yahoo側▼
+
+Yahoo!デベロッパーネットワーク、を参照
+https://developer.yahoo.co.jp/yconnect/v2/
+
+
+上述の頁の「ClientIDを登録しましょう」
+をクリックしてジャンプ
+Yahooアカウントでのログインを要求されるので、ログインする
+
+https://e.developer.yahoo.co.jp/dashboard/
+→アプリケーションの管理、が表示される。
+→「新しいアプリケーションを開発」ボタンをクリック。
+
+
+アプリケーションの種類
+→「サーバーサイド（Yahoo! ID連携 v2）」を選択
+> サーバー上など、秘密鍵を安全に保管できる場所からWeb APIを
+> 使いたい場合に選択してください。
+> OAuth 2.0 Authorization Codeフローによるユーザー属性情報が利用できます。
+
+利用するスコープ
+> 利用可能なスコープはありません
+> ※UserInfoAPIのスコープ(openid、profileなど)はここでは指定せず、
+> ユーザー認可リクエストの中で指定します。
+→とあるので、特に変更しない（出来ない）
+
+サイトURLは、とりあえず何か入れる。
+「このWebアプリの提供元はｘｘです」と利用者へ伝える目的のもの。
+自分サイトを持っているなら、そのトップページあたりを入れてく。
+無ければ、あくまでローカル試行なのだから
+「http://localhost」でもよいかも？（試してないけど）
+
+
+「登録が完了し、Client IDおよびシークレットが発行されました」
+と表示されたら、クライアントIDとクライアントシークレットをメモる。
+
+なお、これらの発行済みの情報は、あとから以下から辿れる。
+（と言うか、辿って編集する必要がある→後述）
+https://e.developer.yahoo.co.jp/dashboard/
+＞アプリケーション一覧
+
+上記をたどって、作成した「アプリケーション」を選択して
+「編集」を押す。
+「コールバックURL」が標準だと「サイトURL」になっているので、
+これを適切に修正する。
+今回であれば
+http://localhost:3000/auth-yahoo/callback
+にする。
+
+
+YahooのOIDC IdPの接続情報は以下から辿れる。
+[Authorization Codeフロー]
+https://developer.yahoo.co.jp/yconnect/v2/authorization_code/
+→[OpenID Configurationエンドポイント]
+　https://developer.yahoo.co.jp/yconnect/v2/authorization_code/configuration.html
+　https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
+
+
+
+なお、Yahooの場合は、「displayName」は定義されていない
+（ように見える。個々人の設定かもしれないが）。
+UserInfoのEndPointから取得するprofileに、そのフィールドは定義されていない
+（nameフィールドはオブジェクトとして存在した。私の場合は空だったが）。
 
 
 
