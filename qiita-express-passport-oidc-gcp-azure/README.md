@@ -89,7 +89,7 @@ GCP（Google）が提供するOIDC認証を行うIdPの情報は、以下に記�
 
   * https://accounts.google.com/.well-known/openid-configuration
 
-上記を参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ぎように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+上記を参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
 
 ```
 var Instance4GoogleOIDC = new OpenidConnectStrategy(
@@ -102,20 +102,104 @@ var Instance4GoogleOIDC = new OpenidConnectStrategy(
       clientSecret: oidcConfig.CLIENT_SECRET,
       callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
       scope: ["openid", "profile"]
-      /**
-       * 公開情報（EndPointとか）は以下を参照
-       * https://developers.google.com/identity/protocols/oauth2/openid-connect
-       * https://accounts.google.com/.well-known/openid-configuration
-       */
     }, function(){ /* 省略 */ } );
 ```
 
 続いて、クライアントIDとクライアントシークレットの設定方法を説明する。
 
-GCPにアクセスしてログインする。
+GCPにアクセスして、Googleアカウントでログインする。
 
 https://cloud.google.com/
 
+右上の「コンソール」ボタンを押してGCPコンソールに移動する。
+
+「ダッシュボード」が表示されるので、左ペインの「APIとサービス」を押下する。
+
+「OAuth2.0認可によるAPIアクセス情報の管理ページ」に移動する。
+
+これは「プロジェクト」単位での管理となるため、初回だと「新規プロジェクトの作成」画面が表示される。任意のプロジェクト名（「変更できない～」と書かれているのは、プロジェクトのObject IDのことで、プロジェクト名称、の事ではない）を入力して「作成」する。場所は、今回は試行なので「組織なし」のままでよい。
+
+![新規プロジェクトの作成](./screenshots/gcp_01create_project.png)
+
+「作成」を押すとダッシュボードのページへ移動して、作成完了となる。
+
+![新規プロジェクトの作成完了](./screenshots/gcp_02dashboard_project.png)
+
+なお、OIDCのIdP機能を利用するだけなので「APIとサービスの有効化」は不要。
+
+続いて、「OAuth同意画面」へ移動する。
+右上のドロップダウンアイコンか、もしくは左上のハンバーガーメニューから「APIとサービス＞OAuth同意画面」へ移動する。
+
+![OAuth同意画面への移動byドロップダウンメニュー](./screenshots/gcp_03cofirm4oauth_pointer1.png)
+
+
+![OAuth同意画面への移動byハンバーガーメニュー](./screenshots/gcp_04cofirm4oauth_pointer2.png)
+
+「OAuth同意画面」の作成に必要な情報を入力する（もちろん後でからも編集可能）。
+* User Type
+  * 本試行では「Googleアカウントを持っている人」を対象とするので「外部」を選択
+* アプリ情報
+  * OIDCで利用者に対して「こういうアプリから、認証を求められています」と表示する情報
+  * アプリ名とユーザーサポートメール、ディベロッパーの連絡先情報、が入力必須
+  * 承認済みドメイン、は後から「認証情報」のところで設定するので、ここでは【入力不要】
+* スコープ
+  * 「APIとサービス」を利用せず、認証機能のみ利用なので、デフォルトのままで「保存して次へ」進む
+* テストユーザー
+  * 「スクープ」と同様に、今回は使用しないのデフォルトのままで「保存して次へ」進む  
+
+![OAuth同意画面Typeは「外部」](./screenshots/gcp_05cofirm4oauth_1type_sample_outer.png)
+
+![OAuth同意画面App情報1](./screenshots/gcp_06cofirm4oauth_1app_info1.png)
+
+![OAuth同意画面App情報2](./screenshots/gcp_07cofirm4oauth_1app_info2.png)
+
+![OAuth同意画面Scope](./screenshots/gcp_08cofirm4oauth_2scope.png)
+
+![OAuth同意画面TestUser](./screenshots/gcp_09cofirm4oauth_3testuser.png)
+
+最後に（今まで入力した内容の確認として）「概要」が表示されたら、一番下までスクロールして「プロジェクトに戻る」ボタンを押せば「OAuth同意画面」の作成は完了。
+
+![OAuth同意画面の概要確認](./screenshots/gcp_10cofirm4oauth_overview_under_retrune_project.png)
+
+続いて、「認証情報」からOIDCするRP向けの「クライアントID」と「クライアントシークレット」を作成する。
+なお「認証情報」を作成するには、あらかじめ「OAuth同意画面」を作成して置く必要があり、未作成の場合は「OAuth同意画面を構成してください」と求められる（ので先ほど作成した）。
+
+![認証情報の作成にはOAuth同意画面の事前作成が必要](./screenshots/gcp_11create_authinfo_with_cofirm4oauth.png)
+
+左ペインの「認証情報」、そのメニューが無い場合は左上のハンバーガーメニューから「APIとサービス＞認証情報」をクリックして移動する。
+作成するのは「OAuth 2.0 クライアント ID」で、上部の「認証情報を作成」をクリックしてドロップダウンするメニューから「OAuth 2.0 クライアント IDの作成」を選択する。
+
+![認証情報の作成](./screenshots/gcp_12create_authinfo4oauth2.0clientid.png)
+
+OAuthクライアントIDを割り当てるアプリケーションの種類を聞かれるので、本サンプルの場合は「ウェブ アプリケーション」を選択する。
+
+![認証情報の作成](./screenshots/gcp_13create_authinfo_type.png)
+
+すると、「承認済みのリダイレクトURI」を入力できるようになるので「＋URIを追加」を押して、OIDCでのIdPからのcallback先のURLを入力する。本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するわけだが、それを「信用してよいか？（承認してよいか？）」をここで設定している）。
+
+```
+http://localhost:3000/auth-gcp/callback
+```
+
+![リダイレクトするコールバック先URLを設定](./screenshots/gcp_15create_authinfo_callback_sample.png)
+
+「名前」はRPクライアントを識別するためのものなので、任意に入力する。
+入力を終えたら、一番下の「作成」ボタンを押すと、「クライアントID」と「クライアントシークレット」が払い出されるので、これをメモする。「クライアントシークレット」はここでしか参照できないので【忘れずにメモ】すること。
+
+![クライアントIDとクライアントシークレット作成完了](./screenshots/gcp_16create_authinfo_clientid_ready.png)
+
+なお、「クライアントID」の参照と「承認済みのリダイレクトURI」の追加は後からも出来て、「APIとサービス＞認証情報＞OAuth2.0クライアントID」の欄から編集アイコンをクリックして操作が可能。
+
+![作成済みのクライアントIDの参照とリダイレクトURIの編集](./screenshots/gcp_17create_authinfo_finish.png)
+
+以上で、IdPへの「クライアントID」と「クライアントシークレット」の登録（作成）が終わったので、これをPRに設定する。本サンプルでは環境変数を経由して設定するので、例えば、以下のようにしてサンプルコードを起動すればよい。
+
+```
+SET GCP_CLIENT_ID=【作成したクライアントID】
+SET GCP_CLIENT_SECRET=【作成したクライアントシークレット】
+
+npm run dev
+```
 
 
 ## Azureが提供するOIDC IdPを利用する方法
@@ -125,8 +209,8 @@ https://cloud.google.com/
 
 # 参考サイト／参考書籍
 
-* タイトル
-    * URL
+* Google Cloud Platformのプロジェクトの削除方法
+    * https://qiita.com/sekitaka_1214/items/e11287b78adf3f468d7f
     
 
 
