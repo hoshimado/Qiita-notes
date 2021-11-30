@@ -20,6 +20,7 @@ https://github.com/hoshimado/qiita-notes/tree/main/qiita-express-passport-oidc-g
 https://qiita.com/hoshimado/items/fbdd66bed304f442d2d5
 
 ※自身でPRを作成済みであり、読み替えが出来るのであれば、本サンプルを利用する必要はない。
+※本サンプルは試行であり、それぞれのログインボタンを推された瞬間にPassportのStrategyをGoogle/Azure/Yahooへ切り替えて、それぞれのOIDC認証が終了するまでに他のアクセスが【来ないことを前提とする】実装、であることに注意。
 
 
 本記事は以下を前提とする。
@@ -76,7 +77,7 @@ PRとしてOIDC認証を行うには、IdP提供元のいわゆる「openid-conf
 
 以下の節で、それぞれのIdP提供元（GCP/Azure/Yahoo）ごとの情報と登録方法について説明する。
 
-なお、いずれのIdP側の操作画面は2021-11-27時点のものとする。
+なお、いずれのIdP側の操作画面は2021-11-27時点のものである。
 
 ## GCPが提供するOIDC IdPを利用する方法
 
@@ -203,6 +204,56 @@ npm run dev
 
 
 ## Azureが提供するOIDC IdPを利用する方法
+
+Azure（Microsoft）が提供するOIDC認証を行うIdPの情報は、以下に記載されている。
+
+* Microsoft ID プラットフォームのドキュメント＞クイック スタート:Microsoft ID プラットフォームにアプリケーションを登録する
+  * https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration
+
+具体的には、上記に記載の手順に従ってAzureポータルにログインした先から辿れる下記を参照。
+
+* https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration
+
+
+※なお、上述の「クイックスタート」の先にある以下の「Node.js Webアプリのチュートリアル」では、Azure提供の認証ライブラリ「`Microsoft Authentication Library for Node (msal-node)`」を利用しているが、本記事では「他のOIDCのIdPと共通の実装から利用する」ことを目的とするので、こちらではなく、冒頭に記載した「`Passport-OpenID Connect`」を用いる。
+
+* Node.js Webアプリケーションのチュートリアル
+  * https://docs.microsoft.com/ja-jp/azure/active-directory/develop/tutorial-v2-nodejs-webapp-msal
+* Microsoft Authentication Library for Node (msal-node)
+  * `@azure/msal-node`
+  * https://www.npmjs.com/package/@azure/msal-node
+  * https://github.com/AzureAD/microsoft-authentication-library-for-js
+
+
+上記のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+
+```
+var Instance4AzureOIDC = new OpenidConnectStrategy(
+    {
+      issuer: "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0",
+      authorizationURL: "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize",
+      tokenURL:         "https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+      userInfoURL:  "https://graph.microsoft.com/oidc/userinfo",
+      clientID:     oidcConfig.CLIENT_ID,
+      clientSecret: oidcConfig.CLIENT_SECRET,
+      callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
+      scope: ["openid", "profile"]
+    }, function(){ /* 省略 */ } );
+```
+
+続いて、クライアントIDとクライアントシークレットの設定方法を説明する。
+
+Azureポータルにアクセスして、Microsoftアカウントでログインする。
+
+https://portal.azure.com/
+
+
+azure_01home.png
+azure_02search_regist.png
+azure_03app_regist_dashboard.png
+azure_04app_scope.png
+
+
 
 ## Yahooが提供するOIDC IdPを利用する方法
 
