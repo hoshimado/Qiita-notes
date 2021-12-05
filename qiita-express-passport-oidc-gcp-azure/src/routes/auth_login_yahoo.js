@@ -79,7 +79,8 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
       callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
       scope: [] 
       // ↑は空白とする。Yahooの場合は、「"openid", "profile"」は「常に暗に指定されている扱い」の様子。
-      // 他の（GoogleやAzure、OneLogin）のように明示亭に指定すると「AuthorizationError: scope value is duplicate.」
+      // 他の（GoogleやAzure、OneLogin）のように明示的に指定すると
+      // 「AuthorizationError: scope value is duplicate.」
       // でエラーする。
       /**
        * 公開情報（EndPointとか）は以下を参照

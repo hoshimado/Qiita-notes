@@ -348,6 +348,98 @@ npm run dev
 
 ## Yahooが提供するOIDC IdPを利用する方法
 
+Yahooが提供するOIDC認証を行うIdPの情報は、以下に記載されている。
+
+* Yahoo! ID連携 v2
+  * https://developer.yahoo.co.jp/yconnect/v2/
+
+具体的には、上記のページ内にリンクのある『Authorization Codeフロー』の先で案内されている以下を参照する。
+
+* https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
+
+上記のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+
+```
+var Instance4YahooOIDC = new OpenidConnectStrategy(
+    {
+      issuer: "https://auth.login.yahoo.co.jp/yconnect/v2",
+      authorizationURL: "https://auth.login.yahoo.co.jp/yconnect/v2/authorization",
+      tokenURL:         "https://auth.login.yahoo.co.jp/yconnect/v2/token",
+      userInfoURL:  "https://userinfo.yahooapis.jp/yconnect/v2/attribute",
+      clientID:     oidcConfig.CLIENT_ID,
+      clientSecret: oidcConfig.CLIENT_SECRET,
+      callbackURL:  THIS_ROUTE_PATH + '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
+      scope: [] 
+      // ↑は空白とする。Yahooの場合は、「"openid", "profile"」は
+      // 「常に暗に指定されている扱い」の様子。
+      // 他の（GoogleやAzure、OneLogin）のように明示的に指定すると
+      // 「AuthorizationError: scope value is duplicate.」
+      // でエラーする。
+    }, function(){ /* 省略 */ } );
+```
+
+続いて、クライアントIDとクライアントシークレットの設定方法を説明する。
+
+「Yahooデベロッパーネットワークトップ　＞　アプリケーションの管理」へアクセスしして、
+Yahooアカウントでログインする。
+なお、下記のURLは、上述のページ内の「ClientIDを登録しましょう」のリンク先が該当する。
+
+https://e.developer.yahoo.co.jp/dashboard/
+
+「アプリケーションの管理」画面が表示されるので「新しいアプリケーションを開発」ボタンを押下する。
+（既に作成済みのものは「アプリケーション一覧」に表示され、そこから編集が可能）
+
+![Yahooアプリ登録のホーム画面](./screenshots/yahoo_01app_home.png)
+
+【ここから続き：以下は仮作成】
+
+「ｘｘｘ」で画面で必要な情報を入力し、下部にある「ｘｘｘ」ボタンを押す
+
+* アプリケーションの種類
+  * 「サーバーサイド（Yahoo! ID連携 v2）」を選択
+* 利用するスコープ
+  * （変更不要であり、そもそも変更できない）
+* サイトURL
+  * とりあえず何か入れる。※リダイレクトURIでは無いので注意。
+  * あくまでローカル試行の今回は「http://localhost:3000」とする。【動作検証未確認】
+  
+アプリケーションの登録が完了すると
+「登録が完了し、Client IDおよびシークレットが発行されました」
+と表示されるので、このクライアントIDとクライアントシークレットをメモする。
+
+これらの発行済みの情報を後から参照するには、先の「アプリケーションの管理画面」から
+「アプリケーション一覧」を辿ればよい。
+
+続いて、OIDCのIdPから情報を受け取るcallback先URLを設定する（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するが、以下略）。
+本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること
+
+```
+http://localhost:3000/auth-yahoo/callback
+```
+
+「アプリケーションの管理画面」から
+「アプリケーション一覧」を辿って、作成した「アプリケーション」を選択して
+「編集」を押す。
+「コールバックURL」が標準だと「サイトURL」になっているので、
+これを適切に修正する。
+今回であれば
+
+
+以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをPRに設定する。
+本サンプルでは環境変数を経由して設定するので、例えば、以下のようにしてサンプルコードを起動すればよい。
+
+```
+SET YAHOO_CLIENT_ID=【作成したクライアントID】
+SET YAHOO_CLIENT_SECRET=【作成したクライアントシークレット】
+
+npm run dev
+```
+
+なお、Yahooの場合は、UserInfoエンドポイントか返却される情報（profile）に「displayName」は定義されていない
+（ように見える。個々人の設定かもしれないが）。
+（nameフィールドはオブジェクトとして存在した。私の場合は空だったが）。
+※GCPやAzureでは「displayName」が定義されている。
+
 
 # 参考サイト／参考書籍
 
