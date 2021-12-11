@@ -130,12 +130,16 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
 
 
 // ログイン要求を受けて、OIDCの認可プロバイダーへリダイレクト。-------------------------------------------------
-router.get('/login', function (req, res, next) {
+router.get(
+  '/login', 
+  function (req, res, next) {
     // 利用する「認証ストラテジー」を指定したうえで、「OIDC」のストラテジーへ進む。
     // FixMe: 複数のリクエストが同時に来ることは想定していないので注意。（※サンプルアプリなので）
     passport.use( Instance4YahooOIDC );
     next();
-}, passport.authenticate("openidconnect"));
+  }, 
+  passport.authenticate("openidconnect")
+);
 
 
 
@@ -202,9 +206,11 @@ router.get('/loginsuccess', function(req, res, next) {
 { user:
    { profile:
       { id: 'IDトークンに含まれるIDと同一',
-        displayName: 'IDトークンに紐づいているユーザー名',
-        name: [Object],
+        name: {},
         _raw: [Object],
+     accessToken:
+      { OIDCのトークンエンドポイントから払い出された、OAuth2.0のアクセストークン },
+
      accessToken:
       { OIDCのトークンエンドポイントから払い出された、OAuth2.0のアクセストークン },
      idToken:

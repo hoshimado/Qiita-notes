@@ -5,38 +5,43 @@ Subject: ExpressとPassportによる実装クライアントで、複数のOpenI
 
 # 概要
 
-複数（Google/Azure/Yahoo）のサービスが提供する、OpenID Connect（以下、「OIDC」と略記）のIdentity Provider（以下、「IdP」と略記）に対して、実際にIdP側に設定・登録する内容とRelying Party(以下「RP」と略記）側への反映について説明する。
+複数のサービス（Google/Azure/Yahoo）が提供する、OpenID Connect（以下、「OIDC」と略記）のIdentity Provider（以下、「IdP」と略記）に対して、次の2つを説明する。なお、ここでは対象サービスとして「無償で**試用が可能**なもの」を選んでいる。
 
-OIDCのIdP提供元によってIdP側の設定手順や呼称が異なるため、OIDCのクライアントID、シークレットキーと「実際のIdp側の操作画面の紐づけ」を目的とする。
+1. 実際にIdP側に設定・登録する内容と、各サービスごとの操作手順
+2. Relying Party(以下「RP」と略記）側への反映方法
 
-本記事ではRP側の実装は同一とし、認証要求先のIdPの設定に応じてそれぞれのOIDC認証が動作することを検証する。PR側は、Node.jsのExpressを使ったWebページ上にPassportを使って簡単に実装したサンプルを用いる。
+その目的は、「OIDCのIdP提供元によってIdP側の設定手順や呼称が異なるが、それをOIDCのクライアントID、シークレットキーに注目して実際のIdp側の操作画面の紐づけること」である。
 
-本記事で用いるPR側のサンプル実装コードは、以下を参照。
+本記事ではRP側の実装は同一とし、認証要求先のIdPの設定に応じて「それぞれのOIDC認証が動作すること」を検証する。PR側は、Node.jsのExpressを使ったWebページ上にPassportを使って簡単に実装したサンプルを用いる。
+
+本記事で用いるRP側のサンプルコードは、以下を参照。
 
 https://github.com/hoshimado/qiita-notes/tree/main/qiita-express-passport-oidc-gcp-azure
 
-なお、上記の「PRのサンプルコード」は以下の記事で作成したモノをベースに、複数IdPの情報を設定するために少し修正したものであり、設計はほぼ同一なので説明は省略する。
+なお上記の「RPのサンプルコード」は、以下の記事で作成したモノをベースに、複数IdPの情報を設定するために少し修正したものである。設計はほぼ同一なので説明は省略する。
 
 https://qiita.com/hoshimado/items/fbdd66bed304f442d2d5
 
-※自身でPRを作成済みであり、読み替えが出来るのであれば、本サンプルを利用する必要はない。
-※本サンプルは試行であり、それぞれのログインボタンを推された瞬間にPassportのStrategyをGoogle/Azure/Yahooへ切り替えて、それぞれのOIDC認証が終了するまでに他のアクセスが【来ないことを前提とする】実装、であることに注意。
+※既にRPを作成済みであり、読み替えが出来るのであれば、本サンプルを利用する必要はない。
+※本サンプルは試行であり、それぞれのログインボタンが押下された瞬間にPassportのStrategyをGoogle/Azure/Yahooへ切り替えて、それぞれのOIDC認証が終了するまでに他のアクセスが【来ないことを前提とする】実装、であることに注意。
 
 
 本記事は以下を前提とする。
 
-* 認証フローは「認可コードフロー（RFC 6749, 4.1. Authorization Code Grant）」を使う
-* IDトークンの取得には「POST形式（RFC6749, 9. Client Authentication にある client_secret_post）」を使う
-* OIDCのIDプロバイダーとして、以下について試行する
-  * Google Cloud Platform（以下、「GCP」と略記）
-    * https://cloud.google.com/
-  * Microsoft Azure（以下、「Azure」と略記）
-    * https://portal.azure.com/
-  * Yahoo! ID連携 v2（以下、「Yahoo」と略記）
-    * https://e.developer.yahoo.co.jp/dashboard/
+* 認証フローは「認可コードフロー」を使う
+    * RFC 6749, 4.1. Authorization Code Grant
+* IDトークンの取得には「POST形式」を使う
+    * RFC6749, 9. Client Authentication にある client_secret_post
+* OIDCのIDプロバイダーとして、無償で試用が可能な以下について試行する
+    * Google Cloud Platform（以下、「GCP」と略記）
+        * https://cloud.google.com/
+    * Microsoft Azure（以下、「Azure」と略記）
+        * https://portal.azure.com/
+    * Yahoo! ID連携 v2（以下、「Yahoo」と略記）
+        * https://e.developer.yahoo.co.jp/dashboard/
 
 
-PRのサンプルコードで使うライブラリは以下。
+RPのサンプルコードで利用するライブラリは以下。
 
 * Express
   * https://expressjs.com/ja/
@@ -45,6 +50,13 @@ PRのサンプルコードで使うライブラリは以下。
 * Passport-OpenID Connect
   * https://github.com/jaredhanson/passport-openidconnect
 
+## 補足（無料で試行が可能の件について）
+
+Azureでは、アカウント作成時に個人確認のためにクレジットカードの入力を求めらるが（すくなくとも以前に実施した時は。現時点では「不要」に変わっている可能性あり）、実際に「従量制のサービスプラン」を明示的に選択して利用しない限り、課金されることはない。
+
+https://qiita.com/hoshimado/items/6aed10a2057fa77487b6
+
+本記事で扱う「アプリの登録」は無償で利用が可能。
 
 
 # サンプルコードの動作環境
@@ -69,19 +81,19 @@ PRのサンプルコードで使うライブラリは以下。
 
 # 各種OIDCのIdPへの登録方法について
 
-PRとしてOIDC認証を行うには、IdP提供元のいわゆる「openid-configuration」情報（EndPointとサポートする形式）と、PR個別に以下の登録が必要となる。
+RPとしてOIDC認証を行うには、IdPのいわゆる「openid-configuration」情報（EndPointとサポートする形式）と、RP個別に以下の登録が必要となる。
 
 * クライアントID
 * クライアントシークレットの
 * コールバックURI
 
-以下の節で、それぞれのIdP提供元（GCP/Azure/Yahoo）ごとの情報と登録方法について説明する。
+以下の節で、IdPのそれぞれの提供元（GCP/Azure/Yahoo）ごとの情報と登録方法について説明する。
 
-なお、いずれのIdP側の操作画面は2021-11-27時点のものである。
+なお、いずれのIdP側の操作画面も、2021-12-05時点のものである。
 
-## GCPが提供するOIDC IdPを利用する方法
+## GCPが提供するOIDCのIdPを利用する方法
 
-GCP（Google）が提供するOIDC認証を行うIdPの情報は、以下に記載されている。
+GCP（Google）が提供するOIDC認証用のIdPの情報は、以下に記載されている。
 
 * Google Identity Platform ＞OpenID Connect
   * https://developers.google.com/identity/protocols/oauth2/openid-connect
@@ -90,7 +102,7 @@ GCP（Google）が提供するOIDC認証を行うIdPの情報は、以下に記�
 
   * https://accounts.google.com/.well-known/openid-configuration
 
-上記を参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+上記を参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次のように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
 
 ```
 var Instance4GoogleOIDC = new OpenidConnectStrategy(
@@ -116,9 +128,9 @@ https://cloud.google.com/
 
 「ダッシュボード」が表示されるので、左ペインの「APIとサービス」を押下する。
 
-「OAuth2.0認可によるAPIアクセス情報の管理ページ」に移動する。
+この「APIとサービス」は「OAuth2.0認可によるAPIアクセス情報」を管理するページであるが、ここでOIDCのアクセス管理（受け入れるクライアントIDの作成／登録）もできる。
 
-これは「プロジェクト」単位での管理となるため、初回だと「新規プロジェクトの作成」画面が表示される。任意のプロジェクト名（「変更できない～」と書かれているのは、プロジェクトのObject IDのことで、プロジェクト名称、の事ではない）を入力して「作成」する。場所は、今回は試行なので「組織なし」のままでよい。
+ここは「プロジェクト」単位での管理となるため、初回だと「新規プロジェクトの作成」画面が表示される。任意のプロジェクト名を入力して「作成」する。場所は、今回は試行なので「組織なし」のままでよい（「変更できない～」と書かれているのは、プロジェクトのObject IDのことで、プロジェクト名称、の事ではないことに注意）。
 
 ![新規プロジェクトの作成](./screenshots/gcp_01create_project.png)
 
@@ -137,16 +149,19 @@ https://cloud.google.com/
 ![OAuth同意画面への移動byハンバーガーメニュー](./screenshots/gcp_04cofirm4oauth_pointer2.png)
 
 「OAuth同意画面」の作成に必要な情報を入力する（もちろん後でからも編集可能）。
+
 * User Type
-  * 本試行では「Googleアカウントを持っている人」を対象とするので「外部」を選択
+    * 本試行では「Googleアカウントを持っている人」を対象とするので「外部」を選択する
+    * 下部の「作成」ボタンを押下すると「アプリ情報」のページに進む
 * アプリ情報
-  * OIDCで利用者に対して「こういうアプリから、認証を求められています」と表示する情報
-  * アプリ名とユーザーサポートメール、ディベロッパーの連絡先情報、が入力必須
-  * 承認済みドメイン、は後から「認証情報」のところで設定するので、ここでは【入力不要】
+    * OIDCで利用者に対して「こういうアプリから、認証を求められています」と表示する情報
+    * アプリ名とユーザーサポートメール、ディベロッパーの連絡先情報、の入力が必須
+    * 承認済みドメイン、は後から「認証情報」のところで設定するので、ここでは【入力不要】
+    * 入力を終えたら「保存して次へ」進む
 * スコープ
-  * 「APIとサービス」を利用せず、認証機能のみ利用なので、デフォルトのままで「保存して次へ」進む
+    * 「APIとサービス」を利用せず、認証機能のみを利用なので、デフォルトのままで「保存して次へ」進む
 * テストユーザー
-  * 「スクープ」と同様に、今回は使用しないのデフォルトのままで「保存して次へ」進む  
+    * 「スクープ」と同様に、今回は使用しないのデフォルトのままで「保存して次へ」進む  
 
 ![OAuth同意画面Typeは「外部」](./screenshots/gcp_05cofirm4oauth_1type_sample_outer.png)
 
@@ -162,8 +177,8 @@ https://cloud.google.com/
 
 ![OAuth同意画面の概要確認](./screenshots/gcp_10cofirm4oauth_overview_under_retrune_project.png)
 
-続いて、「認証情報」からOIDCするRP向けの「クライアントID」と「クライアントシークレット」を作成する。
-なお「認証情報」を作成するには、あらかじめ「OAuth同意画面」を作成して置く必要があり、未作成の場合は「OAuth同意画面を構成してください」と求められる（ので先ほど作成した）。
+続いて「認証情報」から、OIDCするRP向けの「クライアントID」と「クライアントシークレット」を作成する。
+なお「認証情報」を作成するには、あらかじめ「OAuth同意画面」を作成して置く必要があり、未作成の場合は下図のように「OAuth同意画面を構成してください」と求められる（ので先ほど作成した）。
 
 ![認証情報の作成にはOAuth同意画面の事前作成が必要](./screenshots/gcp_11create_authinfo_with_cofirm4oauth.png)
 
@@ -176,7 +191,7 @@ OAuthクライアントIDを割り当てるアプリケーションの種類を�
 
 ![認証情報の作成](./screenshots/gcp_13create_authinfo_type.png)
 
-すると、「承認済みのリダイレクトURI」を入力できるようになるので「＋URIを追加」を押して、OIDCでのIdPからのcallback先のURLを入力する。本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するわけだが、それを「信用してよいか？（承認してよいか？）」をここで設定している）。
+すると、「承認済みのリダイレクトURI」を入力できるようになるので「＋URIを追加」を押して、OIDCでのIdPからのRPへのcallback先のURLを入力する。本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するわけだが、それを「信用してよいか？（承認してよいか？）」をここで設定している）。
 
 ```
 http://localhost:3000/auth-gcp/callback
@@ -186,15 +201,15 @@ http://localhost:3000/auth-gcp/callback
 
 「名前」はRPクライアントを識別するためのものなので、任意に入力する。
 入力を終えたら、一番下の「作成」ボタンを押すと、「クライアントID」と「クライアントシークレット」が払い出されるので、これをメモする。
-「クライアントシークレット」はここでしか参照できないので【忘れずにメモ】すること。
+「クライアントシークレット」は**ここでしか参照できない**ので【忘れずにメモ】すること。
 
 ![クライアントIDとクライアントシークレット作成完了](./screenshots/gcp_16create_authinfo_clientid_ready.png)
 
-なお、「クライアントID」の参照と「承認済みのリダイレクトURI」の追加は後からも出来て、「APIとサービス＞認証情報＞OAuth2.0クライアントID」の欄から編集アイコンをクリックして操作が可能。
+※「クライアントID」の参照と「承認済みのリダイレクトURI」の追加は、後からも出来る。「APIとサービス＞認証情報＞OAuth2.0クライアントID」の欄から編集アイコンをクリックして操作が可能。
 
 ![作成済みのクライアントIDの参照とリダイレクトURIの編集](./screenshots/gcp_17create_authinfo_finish.png)
 
-以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをPRに設定する。
+以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをRPに設定する。
 本サンプルでは環境変数を経由して設定するので、例えば、以下のようにしてサンプルコードを起動すればよい。
 
 ```
@@ -210,14 +225,14 @@ npm run dev
 Azure（Microsoft）が提供するOIDC認証を行うIdPの情報は、以下に記載されている。
 
 * Microsoft ID プラットフォームのドキュメント＞クイック スタート:Microsoft ID プラットフォームにアプリケーションを登録する
-  * https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration
+  * https://docs.microsoft.com/ja-jp/azure/active-directory/develop/quickstart-register-app
 
 具体的には、上記に記載の手順に従ってAzureポータルにログインした先から辿れる下記を参照。
 
 * https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration
 
 
-※なお、上述の「クイックスタート」の先にある以下の「Node.js Webアプリのチュートリアル」では、Azure提供の認証ライブラリ「`Microsoft Authentication Library for Node (msal-node)`」を利用しているが、本記事では「他のOIDCのIdPと共通の実装から利用する」ことを目的とするので、こちらではなく、冒頭に記載した「`Passport-OpenID Connect`」を用いる。
+※なお、上述の「クイックスタート」の先にある以下の「Node.js Webアプリのチュートリアル」では、Azure提供の認証ライブラリ「`Microsoft Authentication Library for Node (msal-node)`」を利用しているが、本記事では「他のOIDCのIdPと**共通の実装から利用**する」ことを目的とするので、こちらではなく、冒頭に記載した「`Passport-OpenID Connect`」を用いる。
 
 * Node.js Webアプリケーションのチュートリアル
   * https://docs.microsoft.com/ja-jp/azure/active-directory/develop/tutorial-v2-nodejs-webapp-msal
@@ -227,7 +242,7 @@ Azure（Microsoft）が提供するOIDC認証を行うIdPの情報は、以下�
   * https://github.com/AzureAD/microsoft-authentication-library-for-js
 
 
-上記のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+上述のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
 
 ```
 var Instance4AzureOIDC = new OpenidConnectStrategy(
@@ -257,13 +272,13 @@ https://portal.azure.com/
 
 ![選択バーからアプリの登録を選択](./screenshots/azure_02search_regist.png)
 
-「アプリの登録」画面で、OIDCログインを行うアプリケーション向けのクライアントキーとクライアントシークレットを作成する。そのためには「新規登録」ボタンを押下する。
+「アプリの登録」画面で、OIDCログインを行うアプリケーション向けのクライアントIDとクライアントシークレットを作成する。そのためにはタイトル直下のメニューにある「新規登録」ボタンを押下する。
 
-なお、「2020年6月30日以降～」と表示されている注意喚起は、OIDC他を利用するクライアント側でAzureが提供する「Azreu Active Directory 認証ライブラリ（ADAL）」を利用している場合向けの内容なので、今回は関係ない（利用していない）。
+※「2020年6月30日以降～」と表示されている注意喚起は、OIDC他を利用するクライアント側でAzureが提供する「Azreu Active Directory 認証ライブラリ（ADAL）」を利用している場合向けの内容なので、今回は関係ない（利用していない）。
 
 ![アプリケーションの新規登録](./screenshots/azure_03app_regist_dashboard.png)
 
-「アプリケーションの登録」画面で必要な情報を入力し、下部にある「登録」ボタンを押す
+「アプリケーションの登録」画面が表示されるので、必要な情報を入力し、下部にある「登録」ボタンを押す
 
 * 名前
   * OIDCで利用者に対して「こういうアプリから、認証を求められています」と表示する際のアプリケーション名称。任意のアプリケーション名称を入力する（後で変更可能）。
@@ -275,15 +290,17 @@ https://portal.azure.com/
 ![アプリケーション登録での入力](./screenshots/azure_04app_scope.png)
 
 認証を行うアプリケーションの登録（作成）が完了すると、「概要」表示の画面に移動する。
-なおこの画面は、後から参照する際は「アプリの登録」画面で「所有しているアプリケーション」の一覧から辿ることができる。
+
+※この「概要」画面は、後から参照する際は「アプリの登録」画面で「所有しているアプリケーション」の一覧から辿ることができる。
 
 この「概要」画面に表示されている「アプリケーション（クライアント）ID」が、OIDCの「クライアントID」となる。
 値の右側のアイコンをクリックするとクリップボードにコピーできるので、メモしておく（後でも、この画面で参照は可能）。
 
 ![登録済みアプリケーションの概要](./screenshots/azure_06app_created4auth.png)
 
-「概要」画面の右ペインの「エンドポイント」をクリックすると、OIDCのIdPの情報が表示される。
-なお、このページの「OpenID Connect メタデータ ドキュメント」に記載されているURLが、
+「概要」画面の右ペインの上部にある「エンドポイント」をクリックすると、OIDCのIdPの情報が表示される。
+
+※表示されたIdPの情報ページの「OpenID Connect メタデータ ドキュメント」に記載されているURLが、
 先ほど「Azureポータルにログインした先から辿れる」と書いた部分のこと。
 
 ![AzureのOIDCのエンドポイント情報](./screenshots/azure_08app_oidc_endpoing.png)
@@ -296,21 +313,21 @@ https://portal.azure.com/
 「クライアント　シークレットの追加」タブが開くので、以下の値を入力して「追加」ボタンを押下する。
 
 * 説明
-  * 区別用の説明として任意に入力する
+    * 区別用の説明として任意に入力する
 * 有効期限
-  * 任意の値を選択する
+    * 任意の値を選択する
 
 ![クライアントシークレットを追加する](./screenshots/azure_10app_client_secret_add.png)
 
 クライアントシークレットが作成される。
-「値」の列に表示の値がOIDCの「クライアントシークレット」となるので、これをメモする。
-「クライアントシークレット」はここでしか参照できないので【忘れずにメモ】すること。
+「値」の列に表示の値がOIDCの「クライアントシークレット」となるので、これをメモする（※「シークレットID」の**列ではない**ので注意）。
+「クライアントシークレット」は**ここでしか参照できない**ので【忘れずにメモ】すること。
 （他の画面へ遷移後に、再び「証明書とシークレット」に戻ってきても「***」となっていて参照できない）
 
 ![クライアントシークレットの作成完了](./screenshots/azure_11app_client_secret_created.png)
 
 
-最後に、OIDCのIdPから情報を受け取るcallback先URLを設定する（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するが、以下略）。
+最後に、OIDCのIdPから情報を受け取るRPのcallback先URLを設定する（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するが、以下略）。
 本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること
 
 ```
@@ -327,6 +344,10 @@ http://localhost:3000/auth-azure/callback
 
 リダイレクトURI入力欄が表示されるので、先の値を入力し、下部の「構成」ボタンを押下する。
 
+※今回は「認可コードフロー」なので、下部にあるチェックボックスは**チェックしない**（これらは、暗黙的なフロー、ハイブリッドフロー用）
+
+※中段にある「ログアウト用のURL」も、今回は試行なのでSkipする。
+
 ![リダイレクトURLの追加](./screenshots/azure_15app_auth_web_callback_sample.png)
 
 リダイレクトURIの設定が完了すると、以下の表示される。
@@ -334,7 +355,7 @@ http://localhost:3000/auth-azure/callback
 
 ![リダイレクトURLの設定完了](./screenshots/azure_17app_auth_web_callback_finished.png)
 
-以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをPRに設定する。
+以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをRPに設定する。
 本サンプルでは環境変数を経由して設定するので、例えば、以下のようにしてサンプルコードを起動すればよい。
 
 ```
@@ -357,9 +378,9 @@ Yahooが提供するOIDC認証を行うIdPの情報は、以下に記載され�
 
 * https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
 
-上記のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次ように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
+上記のIdPの情報（ openid-configuration ）参照して、本サンプルコードでは、passport-openidconnectの提供するStrategyインスタンスのConfigureへ、次のように設定する（ClientIDやclientSecret等は環境変数経由で設定するものとして、後述する）。
 
-ここで、GCPやAzureと異なり`scope`キーには何も指定しない、ことに注意すること。
+ここで、GCPやAzureと異なり`scope`キーには**何も指定しない**、ことに注意すること。
 
 ```
 var Instance4YahooOIDC = new OpenidConnectStrategy(
@@ -384,7 +405,7 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
 
 「Yahooデベロッパーネットワークトップ　＞　アプリケーションの管理」へアクセスしして、
 Yahooアカウントでログインする。
-なお、下記のURLは、上述のページ内の「ClientIDを登録しましょう」のリンク先が該当する。
+具体的には下記のURLにアクセスしてログインする。これは上述のページ内の「ClientIDを登録しましょう」のリンク先が該当する。
 
 https://e.developer.yahoo.co.jp/dashboard/
 
@@ -407,7 +428,7 @@ https://e.developer.yahoo.co.jp/dashboard/
   * アプリケーション名
     * OIDCで利用者に対して「こういうアプリから、認証を求められています」と表示する際のアプリケーション名称。任意のアプリケーション名称を入力する（後で変更可能）。
   * サイトURL
-    * とりあえず何か入れる。※リダイレクトURIでは無いので注意。
+    * とりあえず何か入れる。※リダイレクトURI**ではない**ので注意。
     * デフォルトの「`http://example.com/`」のままでもよい。
   * アプリケーションの説明
     * 任意なので入力省略（あとで変更可能）
@@ -431,9 +452,9 @@ https://e.developer.yahoo.co.jp/dashboard/
 なお、Yahooの場合は、クライアントシークレットの値も（GCPやAzureとは異なり）、
 「アプリケーションの管理＞アプリケーション一覧＞編集」と辿ることで後から参照可能。
 
-![クライアントIDとクライアントシークレットの登録完了](./screenshots/yahoo_04app_clientid_and_secret.png)
+![クライアントIDとクライアントシークレットの登録完了](./screenshots/yahoo_04app_clientid_and_secret-1full.png)
 
-最後に、OIDCのIdPから情報を受け取るcallback先URLを設定する（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するが、以下略）。
+最後に、OIDCのIdPから情報を受け取るRPのcallback先URLを設定する（※IdPへのリダイレクト時に「ｘｘにcallbackして」とURLクエリーで指定するが、以下略）。
 本サンプルでは、具体的には以下を入力する。複数指定できるので、クラウド上に公開するときは、そちらのcallback先URLも追加すること
 
 ```
@@ -451,7 +472,7 @@ http://localhost:3000/auth-yahoo/callback
 
 ![コールバックURLを適切に変更](./screenshots/yahoo_06app_callback_url.png)
 
-以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをPRに設定する。
+以上で、IdPへの「クライアントID」と「クライアントシークレット」、そして「コールバックURL」の登録（作成）が終わったので、これをRPに設定する。
 本サンプルでは環境変数を経由して設定するので、例えば、以下のようにしてサンプルコードを起動すればよい。
 
 ```
@@ -461,7 +482,11 @@ SET YAHOO_CLIENT_SECRET=【作成したクライアントシークレット】
 npm run dev
 ```
 
-### 返却されるprofileの違いについて
+以上ー。
+
+# 蛇足／その他
+
+## 返却されるprofileの違いについて
 
 トークンEndPointが返却するIDトークンは、OIDCの規格で定められているが、
 UserInfoエンドポイントが返却するprofileの内容はIdP毎に自由度がある。
@@ -469,13 +494,41 @@ UserInfoエンドポイントが返却するprofileの内容はIdP毎に自由�
 実際、GCPとAzureではprofileに「displayName」フィールドが含まれるが、
 Yahooの場合は「displayName」フィールドが無い、と言うように差があるので、
 注意すること。
-（なお、Yahooにもnameフィールドはオブジェクトとして存在した。私の環境では空だったが）。
+（なお、Yahooにもnameフィールドはオブジェクトとして存在した。私の環境では値は空だったが）。
+
+## 試行として作成／登録したアプリケーション／プロジェクトの削除方法
+
+（ToDo：後で書く。基本はそれぞれの設定画面に入って「削除」。）
+
+* GCP
+* Azure
+* Yahoo
+
+# 参考サイト
+
+以下、いずれも本文中に記載済みであるが、今回に試行したOIDCのIdPを提供してくれているサービスの公式案内ページと、IdPの「openid-configuration」とを記載する。
+
+* GCP
+    * Google Identity Platform ＞OpenID Connect
+        * https://developers.google.com/identity/protocols/oauth2/openid-connect
+    * GCPが提供するOIDCのIdPのconfiguration情報
+        * https://accounts.google.com/.well-known/openid-configuration
+
+* Azure
+  * Microsoft ID プラットフォームのドキュメント＞クイック スタート:Microsoft ID プラットフォームにアプリケーションを登録する
+      * https://docs.microsoft.com/ja-jp/azure/active-directory/develop/quickstart-register-app
+  * Azureが提供するOIDCのIdPのconfiguration情報
+      * https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration
+
+* Yahoo
+  * Yahoo! ID連携 v2
+      * https://developer.yahoo.co.jp/yconnect/v2/
+  * Yahooが提供するOIDCのIdPのconfiguration情報
+      * https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
 
 
-# 参考サイト／参考書籍
 
-* Google Cloud Platformのプロジェクトの削除方法
-    * https://qiita.com/sekitaka_1214/items/e11287b78adf3f468d7f
+
     
 
 

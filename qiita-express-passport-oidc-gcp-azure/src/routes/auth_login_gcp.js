@@ -126,12 +126,16 @@ var Instance4GoogleOIDC = new OpenidConnectStrategy(
 
 
 // ログイン要求を受けて、OIDCの認可プロバイダーへリダイレクト。-------------------------------------------------
-router.get('/login', function (req, res, next) {
+router.get(
+  '/login', 
+  function (req, res, next) {
     // 利用する「認証ストラテジー」を指定したうえで、「OIDC」のストラテジーへ進む。
     // FixMe: 複数のリクエストが同時に来ることは想定していないので注意。（※サンプルアプリなので）
     passport.use( Instance4GoogleOIDC );
     next();
-}, passport.authenticate("openidconnect"));
+  }, 
+  passport.authenticate("openidconnect")
+);
 
 
 
