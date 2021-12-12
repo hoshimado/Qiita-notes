@@ -1,6 +1,6 @@
 # qiita-express-passport-oidc-gcp-azure
 
-Subject: ExpressとPassportによる実装クライアントで、複数のOpenID Connect認証を試してみる（Google/Azure/Yahoo）
+Subject: 複数のOpenID Connect認証を（Google/Azure/Yahoo）、ExpressとPassportによる実装クライアントで試してみる
 
 
 # 概要
