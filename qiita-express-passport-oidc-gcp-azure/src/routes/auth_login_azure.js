@@ -120,21 +120,26 @@ var Instance4AzureOIDC = new OpenidConnectStrategy(
         },
       });
     }
-  );
+);
 
+/**
+ * Strategies used for authorization are the same as those used for authentication. 
+ * However, an application may want to offer both authentication and 
+ * authorization with the same third-party service. 
+ * In this case, a named strategy can be used, 
+ * by overriding the strategy's default name in the call to use().
+ * 
+ * https://www.passportjs.org/docs/configure/
+ * の、大分下の方に↑の記載がある。
+*/
+passport.use('openidconnect-azure', Instance4AzureOIDC);
 
 
 
 // ログイン要求を受けて、OIDCの認可プロバイダーへリダイレクト。-------------------------------------------------
 router.get(
   '/login', 
-  function (req, res, next) {
-    // 利用する「認証ストラテジー」を指定したうえで、「OIDC」のストラテジーへ進む。
-    // FixMe: 複数のリクエストが同時に来ることは想定していないので注意。（※サンプルアプリなので）
-    passport.use( Instance4AzureOIDC );
-    next();
-  }, 
-  passport.authenticate("openidconnect")
+  passport.authenticate("openidconnect-azure")
 );
 
 
@@ -144,7 +149,7 @@ router.get(
 // ※この時、passport.authenticate() は、渡されてくるクエリーによって動作を変更する仕様。
 router.get(
   '/' + oidcConfig.REDIRECT_URI_DIRECTORY,
-  passport.authenticate("openidconnect", {
+  passport.authenticate("openidconnect-azure", {
     failureRedirect: "loginfail",
   }),
   function (req, res) {
