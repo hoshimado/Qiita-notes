@@ -24,44 +24,15 @@ var oidcConfig = {
 // https://developer.yahoo.co.jp/yconnect/v2/
 
 
-
-// パスポートの初期処理。セッションの設定などをする。-------------------------------------------------
-var session = require("express-session");
-router.use(
-  session({
-    // クッキー改ざん検証用ID
-    secret: process.env.COOKIE_ID,
-    // クライアント側でクッキー値を見れない、書きかえれないようにするか否か
-    httpOnly: true,
-    // セッションの有効期限
-    maxAge: 30*1000,
-    // その他のオプションは以下を参照
-    // https://github.com/expressjs/session#sessionoptions
-    resave: false,
-    saveUninitialized: false
-  })
-);
-router.use(passport.initialize());
-router.use(passport.session());
-
-// ミドルウェアである passport.authenticate() が正常処理したときに done(errorObject, userObject)で
-// 通知された情報を、セッションに保存して、任意のcallback中でセッションから取り出せるようにする。
-// 「何をセッションに保存すべきか？」を選択的に行うためのフックcallback関数。
-// https://qastack.jp/programming/27637609/understanding-passport-serialize-deserialize
+// ここで、
+// 「OpenidConnectStrategy = require("passport-openidconnect")」を
+// Passport.jsのStrategyに設定した場合、Passportとしてのsessino初期化が必須となる。
 // 
-// ※APIオンリーの場合はセッションを無効にするという手も提示されているが、、、login画面へのリダイレクトでは
-//   少なくとも認証された情報の取得が必要なので、ここは要るはず。
-//   認可エンドポイントからcallbackされるときのcodeなどをそのまま使うなら、不要かもしれないが。。。
-//   http://www.passportjs.org/docs/oauth2-api/ ＞ Protect Endpoints
-passport.serializeUser(function (user, done) {
-  console.log("serializeUser:" + user.profile.id);
-  done(null, user);
-});
-// 上記と対となる、取り出し処理。
-passport.deserializeUser(function (obj, done) {
-  done(null, obj);
-});
-
+// OIDCのIdPの違いに依存せずに同一処理となるため、
+// app.jsの方で以下を記載している。
+// 
+// > app.use(passport.initialize());
+// > app.use(passport.session());
 
 
 
@@ -111,6 +82,7 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
       console.log("tokenResponse: ", tokenResponse);
 
       return done(null, {
+        title : 'OIDC by Yahoo',
         profile: profile,
         accessToken: {
           token: accessToken,
@@ -134,7 +106,7 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
  * by overriding the strategy's default name in the call to use().
  * 
  * https://www.passportjs.org/docs/configure/
- * の、大分下の方に↑の記載がある。
+ * の、大分下の方に、上述の「a named strategy can be used」の記載がある。
 */
 passport.use('openidconnect-yahoo', Instance4YahooOIDC);
 
@@ -231,7 +203,9 @@ router.get('/loginsuccess', function(req, res, next) {
 router.use('/', function(req, res, next) {
     console.log('任意の'+THIS_ROUTE_PATH+'配下へのアクセス');
     console.log("+++ req.session.passport +++");
-    console.log(req.session.passport);
+    console.log(req.session);
+    console.log('[req.session.passport.user.profile]')
+    console.log(req.session.passport.user.profile);
     console.log("----------------------------");
 
     if(req.session && req.session.passport && req.session.passport.user && req.session.passport.user.profile){
