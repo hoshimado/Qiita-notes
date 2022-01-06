@@ -16,7 +16,7 @@ Subject: 複数のOpenID Connect認証を（Google/Azure/Yahoo）、ExpressとPa
 
 本記事で用いるRP側のサンプルコードは、以下を参照。
 
-https://github.com/hoshimado/qiita-notes/tree/main/qiita-express-passport-oidc-gcp-azure
+https://github.com/hoshimado/qiita-notes/tree/rel-qiita-2021-12-11-oidc-gcp-azure-yahoo/qiita-express-passport-oidc-gcp-azure
 
 なお上記の「RPのサンプルコード」は、以下の記事で作成したモノをベースに、複数IdPの情報を設定するために少し修正したものである。設計はほぼ同一なので説明は省略する。
 
