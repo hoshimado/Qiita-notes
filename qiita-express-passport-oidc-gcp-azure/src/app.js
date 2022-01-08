@@ -58,7 +58,7 @@ app.use(passport.session());
 // ミドルウェアである passport.authenticate() が正常処理したときに done(errorObject, userObject)で
 // 通知された情報を、セッションに保存して、任意のcallback中でセッションから取り出せるようにする。
 // 「何をセッションに保存すべきか？」を選択的に行うためのフックcallback関数。
-// https://qastack.jp/programming/27637609/understanding-passport-serialize-deserialize
+// https://stackoverflow.com/questions/27637609/understanding-passport-serialize-deserialize
 // 
 // ※APIオンリーの場合はセッションを無効にするという手も提示されているが、、、login画面へのリダイレクトでは
 //   少なくとも認証された情報の取得が必要なので、ここは要るはず。
