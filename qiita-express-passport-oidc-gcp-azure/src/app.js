@@ -58,10 +58,15 @@ app.use(passport.session());
 // ミドルウェアである passport.authenticate() が正常処理したときに done(errorObject, userObject)で
 // 通知された情報を、セッションに保存して、任意のcallback中でセッションから取り出せるようにする。
 // 「何をセッションに保存すべきか？」を選択的に行うためのフックcallback関数。
+// なお、「正常終了したときに呼ばれる」と言う公式の記載にはたどり着けず。。。
+// 一応以下の非公式QAで
+// > Passport uses serializeUser function to persist user data 
+// > (after successful authentication) into session. 
+// との記載はある。
 // https://stackoverflow.com/questions/27637609/understanding-passport-serialize-deserialize
 // 
 // ※APIオンリーの場合はセッションを無効にするという手も提示されているが、、、login画面へのリダイレクトでは
-//   少なくとも認証された情報の取得が必要なので、ここは要るはず。
+//   少なくとも認証された情報の取得が必要なので、本サンプルでは「利用」とする。
 //   認可エンドポイントからcallbackされるときのcodeなどをそのまま使うなら、不要かもしれないが。。。
 //   http://www.passportjs.org/docs/oauth2-api/ ＞ Protect Endpoints
 //
@@ -69,16 +74,40 @@ app.use(passport.session());
 //       ※ここで、userは「OpenidConnectStrategy()」の第二引数で渡されるdone()
 //         に指定した値が入ってくる。
 passport.serializeUser(function (user, done) {
-  console.log("[serializeUser for All]");
-  console.log("serializeUser:id=" + user.profile.id);
-  console.log("serializeUser:\n" + JSON.stringify(user));
-  done(null, user);
+  console.log("+++[serializeUser called with the following parameter]+++");
+  console.log(JSON.stringify(user));
+  console.log("---[serializeUser]---------------------------------------\n");
+
+  // 本サンプルでは、それぞれのauth_login_xxx.jsでのdone()にて
+  // title, keyNam, profileフィールドを持つオブジェクトを渡している。
+  // なので、それを取り出して、セッションに格納しておくこととする。
+  // 
+  // なお、本来は「セッションにはuserIdのみを格納して、他の情報は
+  // サーバー側のDBに保管する。その上で、deserializeUser()にて
+  // 保管したDBから取り出して提供する」実装が望ましい。
+  // が、本サンプルはあくまで「試行」なので、セッションにそのまま格納しておく。
+  // （※この場合であっても、ブラウザ側のcookieに保持されるのはセッションIDのみであって、
+  //     セッションの中身そのものではないことに留意）
+  var sessionPassportUserObject = {};
+  sessionPassportUserObject.title = user.title;
+  sessionPassportUserObject.type = user.typeName;
+  sessionPassportUserObject.profile = user.profile;
+  
+
+  done(null, sessionPassportUserObject);
 });
 // 上記と対となる、取り出し処理。
 passport.deserializeUser(function (obj, done) {
+  // 本来は、上述のように「objに格納されたuserIdをキーとして、別途保管してある
+  // 情報をDBから取得して渡す」のが望ましいが、本サンプルでは簡易化のため、
+  // セッション「obj」に必要な情報をすべて保管してあるので、
+  // 「obj」をそのまま渡すことが「取り出し」となる。
   done(null, obj);
 });
 //*/
+
+
+
 // --- ここまで ----------------------------------------------------------
 
 
