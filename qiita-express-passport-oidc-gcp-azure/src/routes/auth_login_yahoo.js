@@ -23,7 +23,7 @@ var OIDC_CONFIG = {
   CLIENT_ID : process.env.YAHOO_CLIENT_ID,
   CLIENT_SECRET : process.env.YAHOO_CLIENT_SECRET,
   RESPONSE_TYPE : 'code', // Authentication Flow、を指定
-  SCOPE : 'openid profile',
+  SCOPE : 'profile', // 「openid 」はデフォルトで「passport-openidconnect」側が付与するので、指定不要。
   REDIRECT_URI_DIRECTORY : 'callback' // 「THIS_ROUTE_PATH + この値」が、OIDCプロバイダーへ登録した「コールバック先のURL」になるので注意。
 };
 // https://developer.yahoo.co.jp/yconnect/v2/
