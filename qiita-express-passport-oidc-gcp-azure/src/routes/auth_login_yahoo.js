@@ -23,7 +23,7 @@ var OIDC_CONFIG = {
   CLIENT_ID : process.env.YAHOO_CLIENT_ID,
   CLIENT_SECRET : process.env.YAHOO_CLIENT_SECRET,
   RESPONSE_TYPE : 'code', // Authentication Flow、を指定
-  SCOPE : 'profile', // 「openid 」はデフォルトで「passport-openidconnect」側が付与するので、指定不要。
+  SCOPE : 'profile email', // 「openid 」はデフォルトで「passport-openidconnect」側が付与するので、指定不要。
   REDIRECT_URI_DIRECTORY : 'callback' // 「THIS_ROUTE_PATH + この値」が、OIDCプロバイダーへ登録した「コールバック先のURL」になるので注意。
 };
 // https://developer.yahoo.co.jp/yconnect/v2/
@@ -53,16 +53,7 @@ var Instance4YahooOIDC = new OpenidConnectStrategy(
       clientID:     OIDC_CONFIG.CLIENT_ID,
       clientSecret: OIDC_CONFIG.CLIENT_SECRET,
       callbackURL:  THIS_ROUTE_PATH + '/' + OIDC_CONFIG.REDIRECT_URI_DIRECTORY,
-      scope: [] 
-      // ↑は空白とする。Yahooの場合は、「"openid", "profile"」は「常に暗に指定されている扱い」の様子。
-      // 他の（GoogleやAzure、OneLogin）のように明示的に指定すると
-      // 「AuthorizationError: scope value is duplicate.」
-      // でエラーする。
-      /**
-       * 公開情報（EndPointとか）は以下を参照
-       * https://developer.yahoo.co.jp/yconnect/v2/authorization_code/configuration.html
-       * https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration
-       */
+      scope:        OIDC_CONFIG.SCOPE // ['profile' 'email]でも'profile email'でもどちらでも内部で自動変換してくれる。
     },
     /**
      * 第一引数のパラメータでOIDCの認証に成功（UserInfoまで取得成功）時にcallbackされる関数
@@ -200,7 +191,7 @@ router.get('/loginsuccess', function(req, res, next) {
   htmlStr += '<title>login success.</title>';
   htmlStr += '</head>'
   htmlStr += '<body>';
-  htmlStr += 'Yahoo ODIC連携ログインに成功しました。(※Yahooの場合はIDトークン/UserProfile共にnameが含まれない)';
+  htmlStr += 'Yahoo ODIC連携ログインに成功しました。as ' + req.session.passport.user.profile.displayName;
   htmlStr += '</body>';
   htmlStr += '</html>';
 
