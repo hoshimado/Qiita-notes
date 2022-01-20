@@ -4,9 +4,6 @@ var path = require('path');
 var createError = require("http-errors");
 
 
-var passport = require("passport");
-
-
 /**
  * 下記のOIDC連携ログインの情報は、GCPは以下のコンソールから設定と取得を行う。
  * https://cloud.google.com/
@@ -133,6 +130,7 @@ var Instance4GoogleOIDC = new OpenidConnectStrategy(
  * https://www.passportjs.org/docs/configure/
  * の、大分下の方に、上述の「a named strategy can be used」の記載がある。
 */
+var passport = require("passport");
 passport.use('openidconnect-gcp', Instance4GoogleOIDC)
 
 
