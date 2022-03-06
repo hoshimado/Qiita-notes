@@ -2,6 +2,19 @@
 
 Subject: 複数のOpenID Connect認証を（Google/Azure/Yahoo）、ExpressとPassportによる実装クライアントで試してみる
 
+## 追記（GitHub側のみ）
+
+本ソースコード（Qiita向け）では、「
+`"passport-openidconnect": "0.0.2"`
+」を利用しているが、現在の最新は「
+`"passport-openidconnect": "0.1.1"`
+」となっている。
+そちらに対応した＆もう少し重複コード集約したものが
+技術書典12向けのサンプルコードとして以下へあるので、
+興味ある方はそちらも参照
+（理解の観点からは、集約しないほうが見やすいかもしれない？とも思うので、こちらのコードは変更しない）。
+
+https://github.com/hoshimado/tbf12-sample
 
 # 概要
 
