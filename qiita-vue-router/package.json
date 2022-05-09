@@ -1,0 +1,15 @@
+{
+  "name": "qiita-vue-router",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "hoshimado",
+  "license": "MIT",
+  "devDependencies": {
+    "@vue/cli": "^5.0.4",
+    "http-server": "^14.1.0"
+  }
+}
