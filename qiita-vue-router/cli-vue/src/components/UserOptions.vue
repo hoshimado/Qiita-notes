@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="root-div">
         設定画面（オプション変更画面）
     </div>
 </template>
@@ -7,7 +7,9 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
+.root-div {
+    margin: 8px;
+}
 </style>
 
 

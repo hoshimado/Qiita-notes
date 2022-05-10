@@ -8,8 +8,8 @@
             
                 <!-- (Default) Left aligned nav items -->
                 <b-navbar-nav>
-                    <b-nav-item @click="routerTag='/'">Home</b-nav-item>
-                    <b-nav-item @click="routerTag='/useroptions'">設定</b-nav-item>
+                    <b-nav-item to="/">Home</b-nav-item>
+                    <b-nav-item to="/useroptions">設定</b-nav-item>
                     <!-- 
                         Vue-Routerの「to」指定は、BootStrap Nav-itemでもサポートされている。
                         https://bootstrap-vue.org/docs/reference/router-links
@@ -23,22 +23,15 @@
                         <template #button-content>
                             <em>その他</em>
                         </template>
-                        <b-dropdown-item @click="routerTag='/about'">About</b-dropdown-item>
+                        <b-dropdown-item to="/about">About</b-dropdown-item>
                     </b-nav-item-dropdown>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
     </div>
     <div>
-        <div v-if="isHome">
-            <home-portal></home-portal>
-        </div>
-        <div v-if="isUserOption">
-            <user-options></user-options>
-        </div>
-        <div v-if="isAbout">
-            <about></about>
-        </div>
+        <!-- 表示するコンポーネント管理は、Vue-Routerに任せる -->
+        <router-view/>
     </div>
 </div>
 </template>
@@ -54,36 +47,22 @@
 
 <script>
 import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BNavItem, BNavbarNav, BNavItemDropdown, BDropdownItem } from 'bootstrap-vue';
-import HomePortal from './HomePortal.vue';
-import UserOptions from './UserOptions.vue';
-import About from '../views/AboutView.vue';
 
 
 export default {
     name : "MyClient",
     components: {
-        BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BNavItem, BNavbarNav, BNavItemDropdown, BDropdownItem,
-        HomePortal, UserOptions, About
+        BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BNavItem, BNavbarNav, BNavItemDropdown, BDropdownItem
     },
     props: {
     },
     data : function () {
         return {
-            routerTag: '/'
         }
     },
     mounted : function () {
     },
     computed : {
-        isUserOption: function() {
-            return (this.routerTag=='/useroptions');
-        },
-        isAbout: function() {
-            return (this.routerTag=='/about');
-        },
-        isHome: function() {
-            return (this.routerTag=='/');
-        }
     },
     created : function () {
     },
