@@ -45,3 +45,19 @@ Vue CLI v5.0.4
 ```
 npm i bootstrap-vue --save 
 ```
+
+```vue.config.js
+  publicPath: './',
+  outputDir : '../public',
+```
+
+```main.js
+// +++ add for bootstrap +++
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+// -------------------------
+```
+
+
+
+
