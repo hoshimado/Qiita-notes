@@ -69,16 +69,6 @@ export default {
     watch : {
     },
     methods : {
-        /*
-        clickBtnInput : function () {
-            this.isInputAndHistoryView = true;
-            this.isOptinsView          = false;
-        },
-        clickBtnSettingOptions : function () {
-            this.isInputAndHistoryView = false;
-            this.isOptinsView          = true;
-        },
-        */
         clickBrandTitle : function () {
             /* var result = */ alert('サイトトップへ移動（しない）');
         }
