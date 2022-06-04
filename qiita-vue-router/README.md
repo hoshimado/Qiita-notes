@@ -1,11 +1,15 @@
 # 概要
 
+Subject: Vue.jsのRouter機能を、v-showによる疑似的な画面切り替えとの対比で理解する
 
 Vue.js のRouter機能について、以下の観点で説明する。
 
-* divタグ単位での`v-if / v-show`ディレクティブでの表示切り替えから、Router機能を用いた表示切替へ移行する
-    * `vue create` 時に「Router」を選択するだけ、Router機能による切り替えのサンプルコード（Demo）が生成されるが、敢えて上述の比較でとらえる
+* divタグ単位での`v-if / v-show`ディレクティブでの表示切り替えから、Router機能を用いた表示切替へ、移行する
+    * `vue create` 時に「Router」を選択するだけで「Router機能による切り替えのサンプルコード（Demo）」が生成されるが、敢えて上述の比較でとらえる
 * 【これは別記事に。いったん区切るべきかと】Routerで切り替えたページへのデータの渡し方（※「`prop`」でも渡す方法もあるので）について、Vuexを用いる方法を説明する
+
+
+※ほぼ「自身向けのメモ」であるので、悪しからず。
 
 
 ## 動作環境（検証環境）
@@ -27,11 +31,11 @@ Vue.js のRouter機能について、以下の観点で説明する。
 
 ## Vue.jsのCLIでの動作環境の構築
 
-作成済みの人は、本節はSkipして構わない。
+作成済みの人は、本節（環境の構築）をSkipして構わない。
 
 なお、Vue.jsのビルド済みファイルの表示にはhtppサーバーが
 必須なので、ローカル環境での簡易確認を目的に
-「`http-server`」をインストールしておく。
+「`http-server`」もインストールしておく。
 
 ```
 npm init
@@ -50,7 +54,7 @@ Vueコマンドで、Vue-cliプロジェクトを作成。
 
 なお、作成済みのプロジェクト一式を
 [vue-router-if-show.zip](./vue-router-if-show.zip)
-に置いているので、このZipをダウンロードして、
+に置いているので、このZipファイルをダウンロードして、
 展開後のフォルダ内で、「`npm install`」しても良い。
 
 以下は、vueコマンドを用いてゼロから作成する場合の手順。
@@ -62,7 +66,7 @@ npx vue   create cli-vue
 ```
 
 プロジェクトの設定値は以下の通り。
-後のことを考慮して、Routerの他に、Vuexも選択しておく。
+後のことを考慮して、Routerの他にVuexも選択しておく。
 （なお、`Vuex`は本記事の範囲で利用しない）
 
 ```
@@ -83,7 +87,7 @@ Vue CLI v5.0.4
 ? Pick additional lint features: Lint on save   
 ? Pick a unit testing solution: Mocha
 ? Where do you prefer placing config for Babel, ESLint, etc.? In dedicated config files
-? Save this as a preset for future projects? (y/N)
+? Save this as a preset for future projects? (y/N) No
 ```
 
 Vue-CLIのプロジェクト作成が完了したら、そのルートに
@@ -107,13 +111,13 @@ module.exports = defineConfig({
 
 
 続いて、BootStrap-Vueをインストールする。
-具体的には次コマンドを実行。
+具体的には次のコマンドを実行。
 
 ```
 npm i bootstrap-vue --save 
 ```
 
-BootStrap-Vueのインストールを終えたら、Vue.jsの
+BootStrap-Vueのインストールを終えたら、先ほど作成したVue.jsのプロジェクトフォルダ内の
 「`main.js`」ファイルを開いて、既存の`import`記述に続けて、
 以下を追記する。
 
@@ -129,7 +133,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 デフォルトのVue-CLIでのRouterサンプルファイルの
 表示確認が出来るが、今回は敢えてしない。
 
-※デフォルトのサンプルファイルについては、Vue.jsの公式ページのガイドに記載があるので、そちらを参照。
+※デフォルトのサンプルファイルについては、以下のVue.jsの公式ページのガイドに記載があるので、そちらを参照。
 
 * ルーティング — Vue.js
     * https://jp.vuejs.org/v2/guide/routing.html
@@ -139,8 +143,8 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 ## まずは、Routerを使わずにページ切り替え（表示エリア切り替え）を行う
 
-BootStrap（BootStrap-Vue）のメニューバーを用いた、
-ページ切り替えを、Router機能を使わずに実装してみる。
+BootStrap（BootStrap-Vue）のメニューバーを用いたページ切り替えを、
+Router機能を使わずに実装してみる。
 
 そのサンプルコードは以下のようになる。
 
@@ -183,7 +187,7 @@ export default {
 </script>
 ```
 
-表示先のMyClientファイルは次のように作成する。
+表示先のMyClient.vueファイルは次のように作成する。
 
 これは、上部ペイン（ヘッダー相当）にBootStrap-Vueによるメニューバーを表示し、
 そこでのメニューのclickに応じて、その配下の表示領域を`v-show`で切り替える機能を実装している。
@@ -313,22 +317,20 @@ export default {
 前節まででの画面切り替え機能の実装を、Router機能を用いて実装する場合は、
 MyClient.vueを次のように書き換える。
 
+
 ※書き換えた後のソースコードは、
 先に述べた
-作成済みのプロジェクト一式「
-[vue-router-if-show.zip](./vue-router-if-show.zip)
-」
+作成済みのプロジェクト一式「[vue-router-if-show.zip](./vue-router-if-show.zip)」
 内にある、
 「`src\components\MyClient.router.vue`」
 である。
 （この「`MyClient.router.vue`」をそのまま使う場合は、
 既存の「`MyClient.vue`」を削除したのちに、
-「`MyClient.router.vue`」を「`MyClient.vue`」へ
-リネームすること）
+「`MyClient.router.vue`」を「`MyClient.vue`」へリネームすること）
 
 
 `<b-nav-item>`タグのクリック時の切り替え操作を、
-先は自前実装していたのに対して、Router機能を用いる場合は、
+先の例では自前実装していたのに対して、Router機能を用いる場合は、
 特に実装する必要が無い。属性`to`に指定したキーに応じて、
 Router機能が処理してくれる。
 
@@ -456,27 +458,30 @@ const router = new VueRouter({
 export default router
 ```
 
-上記に置いて、フォルダ「`viwes`」配下のVueコンポーネントを指す方に書いているが、
+上記において、フォルダ「`viwes`」配下のVueコンポーネントを
+切り替え先として書いているが、
 Router機能を用いる場合は、対象のViewはフォルダ「`viwes`」配下に
 配置するのが一般的だから、である。
 
 その表示対象のViwe画面を構成する「部品」の位置付けとなるVueコンポーネントはもちろん、
 これまで通り「`components`」フォルダ配下に配置していく。
-（今回の例では、View画面辺り1コンポーネントしか使わないので、ほぼスルーパスになっている）。
+（今回の例では、View画面あたり1コンポーネントしか使わないので、ほぼスルーパスになっている）。
 
 
 ここまでの書き換えを終えた状態で
 「`npm run serve`」コマンドでデバッグ実行を行うと、
 表示としては、先の節と同じようになる。
 
-「設定」「その他＞about」をclickした時の動作もほぼ同じである。
+「設定」と「その他＞about」をclickした時の動作もほぼ同じである。
 「ほぼ」と表現したのは、Router機能を用いた実装の場合は、
-「表示状態毎にURLバーの表示が変わる」部分に差分があるからである。Router機能を用いた場合は、表示したページの状態をURLでそのまま指定できる、と言える。
+「表示状態毎にURLバーの表示が変わる」部分に差分があるからである。
+Router機能を用いた場合は、表示したページの状態をURLでそのまま指定できる、と言える。
 
 ※URLバーの表示方法は「`#`を含む形式（Hash Mode）」と「含まない形式（History Mode, こちらはServer側でのURL処理の設定も合わせて必要）」とがある。詳細は、公式のガイドを参照。→ https://v3.router.vuejs.org/ja/guide/essentials/history-mode.html
 
-以上で、Router機能での画面切り替えを、BootStrap-Vueのメニューコンポーネントと
-組み合わせて利用するケース、`v-show`機能を用いた切り替えとの対比は完了。
+
+Router機能での画面切り替えを、BootStrap-Vueのメニューコンポーネントと
+組み合わせて利用するケース、`v-show`機能を用いた切り替えとの対比は、以上。
 
 
 # 補足：プロダクションbuildしての動作確認について
@@ -491,7 +496,8 @@ Vue.jsのプロジェクトのフォルダ「cli-vue」と同じ階層に
 公開用のbuild済みファイルが出力される。
 
 これをローカルで動作確認するには、フォルダ「public」の上位のフォルダで
-以下のコマンドを実行する（本記事の冒頭で `npm i http-server --save-dev` したフォルダ）。
+以下のコマンドを実行する
+（本記事の冒頭で「`npm i http-server --save-dev`」したフォルダ）。
 
 ```
 npx   http-server
