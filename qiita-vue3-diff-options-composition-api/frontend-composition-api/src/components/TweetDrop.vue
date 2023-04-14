@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from '@vue/reactivity';
+import { computed } from 'vue';
 import { onMounted, ref } from 'vue';
 
 import { format } from 'date-fns'
@@ -16,7 +16,7 @@ const tweetTextLength = computed(()=>{
     return (tweetText.value) ? tweetText.value.length : 0;
 });
 var lastTweetText = '';
-const getNowWithFormat = function name(params) {
+const getNowWithFormat = function() {
     const now = new Date()
     const result = format(now, 'yyyy/MM/dd HH:mm')
     return result;
