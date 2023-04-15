@@ -26,10 +26,8 @@ Vue3でのVueファイル（SFCファイル）の書き方とトランスパイ�
 
 Veu3でも「Options API」は「引き続きサポート」されます。
 
-> Options API は Vue の不可欠な要素であり、多くの開発者が Vue を愛する理由にもなっています。 
-> Composition API の利点の多くは大規模プロジェクトでこそ現れるものであり、
-> 多くの低~中程度の複雑性のシナリオにおいては 
-> Options API が堅実な選択肢であり続けることも理解しています。
+> Options API は Vue の不可欠な要素であり、多くの開発者が Vue を愛する理由にもなっています。Composition API の利点の多くは大規模プロジェクトでこそ現れるものであり、多くの低~中程度の複雑性のシナリオにおいてはOptions API が堅実な選択肢であり続けることも理解しています。
+> 
 
 ref. https://ja.vuejs.org/guide/extras/composition-api-faq.html#will-options-api-be-deprecated
 
@@ -57,7 +55,7 @@ Vue3から推奨となったComposition APIの解説は次のサイトがお勧�
 
 想定読者は次の方です。
 
-* Vue2で、Vue-Cli（ `@vue/cli` ）を用いてWebアプリを作成していた方
+* Vue2で、Vue CLIコマンド（ `@vue/cli` ）を用いてWebアプリを作成していた方
 * Vue2からVue3への移行を始めようとする方
 
 
@@ -88,6 +86,13 @@ Vue3から推奨となったComposition APIの解説は次のサイトがお勧�
 
 
 # Vue3での作成手順
+
+次の順で説明します。
+
+1. Vueプロジェクトの導入寳保
+2. Vueファイルの記法の違い
+    * Vue2相当のOptions API
+    * Vue3推奨のComposition API
 
 ## Vueプロジェクトの導入方法（CLIでbuildするコマンドを準備）
 
@@ -127,7 +132,7 @@ ref. https://docs.npmjs.com/cli/v9/commands/npm-init
 
 
 
-「 `npm init vue@latest` 」コマンドを実行した際に入力する内容の説明に戻ります。
+「 `npm init vue@latest` 」コマンドを実行した際に入力する内容の説明に、戻ります。
 
 初回実行時は、vueの初期化用パッケージの取得を確認してくるので、
 yを押下します。
@@ -153,7 +158,7 @@ Vue.js - The Progressive JavaScript Framework
 √ Add ESLint for code quality? ... No / -Yes-
 √ Add Prettier for code formatting? ... -No- / Yes
 
-Scaffolding project in D:\AsGitHub\vue3trial\frontend\vue-project...
+Scaffolding project in D:\[XXX]\frontend\vue-project...
 
 Done. Now run:
 
@@ -167,7 +172,7 @@ Done. Now run:
 
 ## Vue3でのVueファイルの記述方法（SFCファイルの記述方法）
 
-デモ画面の説明は他のサイトに譲り[^2][^3]、本記事では次の機能を有した[サンプルコード](#サンプルコード)を用いて記述方法を説明します。
+デモ画面の説明は他のサイトに譲り[^2] [^3]、本記事では次の機能を有した[サンプルコード](#サンプルコード)を用いて記述方法を説明します。
 
 * 入力したテキストの文字列をカウントするWebアプリ
 * 入力したテキストはブラウザのローカル領域に自動保存される
@@ -179,7 +184,8 @@ Done. Now run:
 実装の設計概要は次の構造の通りです。
 Componet間での親→子のデータ渡しを含む例とするため、
 `App.vue`で、`utils/localStorageClinet.js` を読み込んで
-`new`したインスタンスを渡して、`TweetDrop.vue`で利用する形としています。
+`new`したインスタンスを子コンポーネントに渡して、
+`TweetDrop.vue`で利用する形としています。
 
 ```
 frontend
@@ -207,7 +213,7 @@ Vue3でも、Vue2と同じ記法で記述できます。
 この記述方法を「Options API」と呼びます。
 
 今回のサンプルでは`App.vue`と`TweetDrop.vue`を次のように実装しています（Css部分は省略）。
-コードの全体像は、「[サンプルコード](#サンプルコード)」の節からリポジトリを参照ください。
+コードの全体像は、「[サンプルコード](#サンプルコード)」の節に記載のリポジトリを参照ください。
 ここで注目してほしいのは、実装方法**ではなく**、次の2点です。
 
 * Vue3でも、Vue2と全く同じ記法を用いれること（Options API）
@@ -426,17 +432,18 @@ onMounted(()=>{
 それぞれの記法の特徴などの説明は、他のサイトに譲ります。節「[Vue2とVue3の違い](#Vue2とVue3の違い)」で紹介した記事が良くまとまっているのでお勧めです。
 
 
-詳細は上記の記事に書いてある通りですが、ザッとサンプルコードの
-`TweetDrop.vue`で比較してみると、次のようになります。左がComposition API記法で、右がOptions API記法です。
+詳細は上記の記事を参照いただきたいのですが、ザッとサンプルコードの
+`TweetDrop.vue`で比較してみると、次のようになります。
+左がComposition API記法で、右がOptions API記法です。
 見ての通り、`<template>`タグ内は同一（後半は省略）です。異なるのは
 `<script>`タグの中となります。
 
 ![CompositionとOptionsの比較](./images/diff-tweet-drop.png)
 
-なんとなく「どう置き換わるか？」が分かるのではないでしょうか。Options API記法を知っている人がComposition API記法に移行するのは特にハードルは無いかと思います。このサンプルの範囲での移行時の注意点としては、次の部分です。
+このサンプルの範囲での移行時の注意点としては、次の部分です。
 
-* `defineProps()`で親コンポーネントから渡されたプロパティに`<script setup>`タグ内でアクセスするには、明示的に`const props = defineProps()`で宣言しておき、`props.XXX`の形でアクセスする必要があること。
-* 一方で、`<templaｔe>`タグ内でアクセスする場合は、`props`への代入を省略して、`XXX`に直にアクセス可能。たとえば`MyClient.vue`では次のように`<template>`タグ内のみのアクセスのため省略した表記が可能。
+* `defineProps()`で親コンポーネントから受け取ったプロパティに`<script setup>`タグ内でアクセスするには、明示的に`const props = defineProps()`で宣言しておき、`props.XXX`の形でアクセスする必要があること。
+* 一方で、`<templaｔe>`タグ内でアクセスする場合は、`props`への代入を省略して、`XXX`に直にアクセス可能であること。たとえば（先ほどは記載を省略した）`MyClient.vue`では次のように`<template>`タグ内のみのアクセスのため、代入を省略した表記が可能。
 
 ```MyClient.vue
 <script setup>
@@ -466,8 +473,6 @@ onMounted(()=>{
 
 公式ガイドでは、`<script setup>`タグ内でPropsにアクセスする場合の記法として次のサンプルコードが記載されています。
 
-ref. https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
-
 ```
 <script setup>
 const props = defineProps({
@@ -475,13 +480,15 @@ const props = defineProps({
 })
 ```
 
-`<template>`タグ内のみでのPropsアクセスの例は記載が見当たりませんが、仕様として次の記載があります。実際、`definePoprs()`の戻り値変数を経由することなく、Propsに直接アクセスが可能です。
+ref. https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
 
-ref. https://vuejs.org/api/sfc-spec.html#script-setup
+`<template>`タグ内のみでのPropsアクセスの例は記載が見当たりませんが、仕様として次の記載があります。実際、`definePoprs()`の戻り値変数を経由することなく、Propsに直接アクセスが可能です。
 
 > 
 > Top-level bindings in \<script setup\> are automatically exposed to the template. For more details
 >
+
+ref. https://vuejs.org/api/sfc-spec.html#script-setup
 
 
 
@@ -489,22 +496,34 @@ ref. https://vuejs.org/api/sfc-spec.html#script-setup
 
 ## 実行方法（build方法）
 
-Vue3では、Vue2での`npm run serve`コマンドに代わり、
-`npm run dev`を用いる。
+Vue3では、Vue2でのdebug実行時のコマンドの設定が「`npm run serve`」から「`npm run dev`」へ変更となります。
+
+`npm` で呼び出されるコマンドの実体も次の通りにVue CLIコマンドから、Viteコマンドへ変更となります[^4]。
+
+* Vue2: Vue CLIコマンド
+    * `"serve": "vue-cli-service serve"`
+* Vue3: Viteコマンド
+    * `"dev": "vite"`
+
+ref. https://ja.vuejs.org/guide/scaling-up/tooling.html#project-scaffolding
+
+
+[^4]: Vue CLIコマンドも引き続き利用可能ですが、「メンテナンスモード」となっているため、Viteの利用が推奨されています。 https://ja.vuejs.org/guide/scaling-up/tooling.html#vue-cli
 
 サンプルコードでは
 `frontend-options-api` フォルダ、
 `frontend-composition-api` フォルダ、
-それぞれで次のコマンドを実行するとデバッグ実行できる。
-もちろん`npm install`は初回のみで良い。
+それぞれで次のコマンドを実行するとデバッグ実行ができます（※`npm install`コマンドは初回のみの実行で以降はスキップしてください）。
 
 ```
   npm install
   npm run dev
 ```
 
+正式buildのコマンド設定は`npm run build`で変更ありませんが、build時にViteを使う場合（標準設定）は、buildオプションの定義ファイルが `vite.config.js` ファイルで指定するように変更になっているので注意ください[^5]。
+
+[^5]: Build Options, https://vitejs.dev/config/build-options.html
+
 
 以上ー。
-
-（正式buildのコマンドは`npm run build`で変わらないので省略。buildオプションの指定方法には変更があるので、公式ガイドを参照のこと）
 
