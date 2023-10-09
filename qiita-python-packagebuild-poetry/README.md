@@ -15,14 +15,14 @@ Pythonソースコードをパッケージ化する方法（他環境へ配布�
 
 作成する配布用ファイルはWheel形式とし、作成方法は「`poetry`コマンドを用いる方法」を採用する。
 
-「[`setup.py`を用いる方法（`setup()`を用いる方法）](https://qiita.com/hoshimado/items/7c99e6ef4c9d1bc6bb87)」との対比を意識して説明する。そのため本記事内には、対比先の記事と同一の説明を含む（扱いが`setup()`を用いる場合と同一のため）。
+「[`setup.py`を用いる方法（`setup()`を用いる方法）](https://qiita.com/hoshimado/items/7c99e6ef4c9d1bc6bb87)」との対比を意識して説明する。そのため本記事内には、対比先の記事と同一の説明を含む（扱いが`setup()`を用いる場合と同一の個所について）。
 
 
 # 目的
 
 Node.jsで言うところの「`npm --save　install [モジュール名]`コマンドで package.json に構築しておけばOK」をPythonでどうやるのか？　という疑問への回答を目的とする。
 
-なお、上記に対してそのまま答えるのであれば「Pythonでは、poetryコマンドで依存関係を管理する場合は、その際に出力される`pyproject.toml`を一緒に添えておけばよい（受け取った側は `poetry install`する）」となる。
+なお、上記に対してそのまま答えるのであれば「Pythonでは、poetryコマンドで依存関係を管理する場合は、`poetry new`で生成される`pyproject.toml`を一緒に添えておけばよい（受け取った側は `poetry install`する）」となる。
 しかし本記事では、「Pythonでは、パッケージ形式（Wheel形式）に固めて配布し、それをインストールしてパッケージ呼び出し形式で使ってもらう」というケースへの対応を意図する。これは、Pythonの場合はこのケースへの要求が多い、ように感じられたためだ。
 
 
@@ -43,14 +43,14 @@ Node.jsで言うところの「`npm --save　install [モジュール名]`コマ
 * WSL2::Ubuntu 22.04.1 LTS
     * dockerイメージ「python:3.9-alpine3.18」
 
-なお、仮想環境を次のように使い分けるので、明示的に記載するようにする（poetryの仮想環境に集約すべきかもしれないが、パッケージ利用環境ではpoetry利用を強制したくない、ので）。
+なお、「Python仮想環境」（以下、「仮想環境」と略記）を次のように使い分けるので、明示的に記載するようにする（poetryの仮想環境に集約すべきかもしれないが、パッケージ利用環境ではpoetry利用を強制したくない、ので）。
 
 * パッケージの開発場面（動作確認とビルド等）はpoetryの仮想環境を利用
 * ビルド済みのパッケージをインストールして動作確認＆利用する場面は、Python標準のvenvの仮想環境を利用
 
-※「Pythonの仮想環境とはなんぞや？」と言う方は、付録章の「[仮想環境とは？](#仮想環境とは)」を参照のこと。
+※「Python仮想環境とはなんぞや？」と言う方は、付録章の「[仮想環境とは？](#仮想環境とは)」を参照のこと。
 
-何れの環境でも、`poetry`パッケージを、`pip install poetry`で、仮想環境にではなく素のPython環境側にインストールしてあるものとする。また、インストール後に以下の設定を実行済みとする（Poetryの仮想環境の作成場所をプロジェクト直下とするオプション値）。
+何れの環境でも、`poetry`パッケージを`pip install poetry`コマンドで、仮想環境にではなく素のPython環境側にインストールしてあるものとする。また、インストール後に以下の設定を実行済みとする（Poetryの仮想環境の作成場所をプロジェクト直下とするオプション設定）。
 
 ```
 poetry config virtualenvs.in-project true
@@ -62,7 +62,6 @@ poetry config virtualenvs.in-project true
 
 以下を参照のこと。
 
-（後で更新）
 https://github.com/hoshimado/qiita-notes/tree/main/qiita-python-packagebuild-poetry/
 
 
@@ -167,16 +166,22 @@ build-backend = "poetry.core.masonry.api"
 [^2]: 「このコマンドは、ほとんどのプロジェクトに適するディレクトリ構造を作成して、新しいPythonプロジェクトに勢いをつける助けをしてくれます」, https://cocoatomo.github.io/poetry-ja/cli/#new
 [^3]: 既存のPythonソースコードに対してパッケージの設定を行う際には、`poetry init`コマンドを用いる方法もある。 , https://cocoatomo.github.io/poetry-ja/cli/#init
 
-ここで、パッケージの動作に必要な依存関係は、`poetry add`コマンドを用いて`poetry add requests [other-package-name]`のようにして設定する。すると、poetryが`pyproject.toml`の`[tool.poetry.dependencies]`セクションに適切に追記してくれる。
+ここで、パッケージの動作に必要な依存関係は、`poetry add`コマンドを用いて次のように設定する。
 
-なお、`poetry new`コマンドを用いて作成したひな形では（環境によるが）次のように初期設定されており、この状態だと`poetry add`コマンドでの任意のパッケージ追加時に「対象のパッケージのPythonバージョン条件（3.11以上、4.00未満）を満たすパッケージが見当たらない」とエラーになることがある。
+```
+poetry add requests [other-package-name]
+```
+
+すると、poetryが`pyproject.toml`の`[tool.poetry.dependencies]`セクションに適切に追記してくれる。
+
+なお、`poetry new`コマンドを用いて作成したひな形では（環境によるが）次のように初期設定されており、この状態だと`poetry add`コマンドでの任意のパッケージ追加時に「対象のパッケージのPythonバージョン条件（3.11以上、4.00未満）を満たすパッケージが見当たらない」と言うエラーになることがある。
 
 ```
 [tool.poetry.dependencies]
 python = "^3.11"
 ```
 
-その場合は、たとえば次のようにPythonバージョンの条件を狭めるように記載を変更してから、実行すると良い。
+その場合は、たとえば次のようにPythonバージョンの条件を狭めるように記載を変更してから、`poetry add`コマンドを実行すると良い。
 
 ```
 [tool.poetry.dependencies]
@@ -210,7 +215,7 @@ poetry build
 
 Poetryの仮想環境に入っている場合は、いったん仮想環境を抜ける（`deactivate`コマンド）。
 
-適当な任意のフォルダーに移動し、そこに真っ新なPython仮想環境を作成する。
+適当な任意のフォルダーに移動し、そこに真っ新な仮想環境を作成する。
 たとえば、次のようにする（ここではPython標準のvenv仮想環境を用いるものとする）。
 
 ```
@@ -230,8 +235,8 @@ setuptools 58.1.0
 この環境に対して、先ほど作成したWheelファイル（`*.whl`）を`pip`コマンドでインストールする。
 
 ```
-(.venv_dl) /home/work/downloads # pip install ../poetry_flat_layout/dist/weatherforecast-0.0.1-py3-none-any.whl
-Processing /home/work/poetry_flat_layout/dist/weatherforecast-0.0.1-py3-none-any.whl
+(.venv_dl) /home/work/downloads # pip install ./dist/weatherforecast-0.0.1-py3-none-any.whl
+Processing /home/work/dist/weatherforecast-0.0.1-py3-none-any.whl
 Collecting requests<3.0.0,>=2.31.0
   Using cached requests-2.31.0-py3-none-any.whl (62 kB)
 （略）
@@ -274,7 +279,7 @@ python -m weatherforecast
 
 たとえばNode.jsであれば「`npm install [パッケージA]`を実行すると、そのパッケージは`npm`コマンドを実行したフォルダー配下でのみ有効」であり、別のフォルダーで`npm instal [パッケージ@バージョン]`コマンドを実行した場合はそれぞれのフォルダー毎に異なるバージョンのパッケージを利用する事が可能（「ローカルにインストールする」と呼称する。すべてのフォルダーで利用可能にするには「`npm instal [パッケージ名] -g`」コマンドで明示的に「グローバルにインストールする」必要がある）。しかしPythonでは「ローカルにインストールする」と言う概念はない。代わりに「仮想環境」を作成して入った状態では、`pip install [パッケージ名]`でインストールしたパッケージは、その「仮想環境」の中でのみ利用可能となる。異なる仮想環境を作ることで、異なるバージョンのパッケージをインストールして利用することが可能となる。
 
-具体的な仮想環境の作成と、その中に入る手順を次に示す。
+具体的な仮想環境の作成と、その中に入る**2種類の手順**を次に示す。
 
 ### Python標準のvenvパッケージ利用の場合
 
@@ -325,10 +330,10 @@ deactivate
 source .venv\bin\activate
 ```
 
-仮想環境の実態は「`python -m venv .venv`」を実行したフォルダ配下に作成されるフォルダ「`.venv`」となる。2回目以降に「仮想環境」に入るには、そのフォルダ「`.venv`」があるところで実行する。
+仮想環境の実態は「`poetry shell`」を実行したフォルダ配下に作成されるフォルダ「`.venv`」となる。2回目以降に「仮想環境」に入るには、そのフォルダ「`.venv`」があるところで実行する。
 
 
-なお、2回目以降の仮想環境への入り方は、より正確には次のコマンドとなる。ここで`poetry env info --path`が返す値は、上述の`.venv`へのパスである。なので、フォルダ「`.venv`」があるところで実行する分には、上記のように直接指定で良い。
+なお、2回目以降の仮想環境への入り方は、より正確には次のコマンドとなる。ここで`poetry env info --path`が返す値は、上述の`.venv`への絶対パスである。なので、フォルダ「`.venv`」があるところで実行する分には、上記のように直接指定で良い。
 
 ```
 `source $(poetry env info --path)/bin/activate`
@@ -354,6 +359,8 @@ source .venv\bin\activate
 * Pythonにおいて、「パッケージ」とは「モジュールをまとめて格納したフォルダー」のことを意味する。「モジュール」とは「Pythonファイル（*.py）」を意味する
 * 「パッケージ化する」とは「パッケージ（フォルダー）に格納したモジュール一式を、配布形式にする」と言える
 * したがって上記のように「対象の関数を定義したPythonソースコードを、フォルダー配下に格納した状態」とするのが望ましいようだ
+
+
 
 
 
