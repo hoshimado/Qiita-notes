@@ -39,6 +39,10 @@ GitHubリポジトリを用いて配布とインストールができるよう�
 
 * 「[Pythonソースコードをパッケージ化する方法（他環境へ配布を目的として）（Poetry利用）](https://qiita.com/hoshimado/items/aa27b3c6287cb279d0ca)」
 
+なお、後述の「pipコマンドによる配布パッケージのインストール」実行時は、
+上述の配布パッケージ作成の記事にある「[作成したパッケージの動作確認の方法](https://qiita.com/hoshimado/items/7c99e6ef4c9d1bc6bb87#%E4%BD%9C%E6%88%90%E3%81%97%E3%81%9F%E3%83%91%E3%83%83%E3%82%B1%E3%83%BC%E3%82%B8%E3%81%AE%E5%8B%95%E4%BD%9C%E7%A2%BA%E8%AA%8D%E3%81%AE%E6%96%B9%E6%B3%95)」
+と同様に、インストール実行前に仮想環境に入っておくことを推奨する。
+
 
 
 
@@ -77,6 +81,10 @@ GitHubリポジトリを利用する方法は、「git cloneしてそこから�
 Privateリポジトリに配置するケースでは、配置方法は同じであるがインストール時の
 認証に関する設定が追加で必要なる。そちらについては次の節で解説する。
 
+この方式は「リポジトリをgit cloneし、その後にcloneしたリポジトリからパッケージをインストールする」
+流れなので、配布パッケージのファイル作成（`*.whl`）はする必要がない。
+必要なのは「配布パッケージのファイル作成ができる状態のファイル・フォルダー構成」となる。
+
 
 
 ## 配布パッケージをリポジトリに格納する方法
@@ -94,50 +102,84 @@ https://github.com/hoshimado/qiita-notes/tree/main/qiita-python-packagebuild-set
 ## GitHubのPublicリポジトリからpipコマンドでインストール方法
 
 
-GitHubのPublicリポジトリに配置された配布パッケージからpipインストールするために必要な情報は次です。
+GitHubのPublicリポジトリに配置された配布パッケージからpipインストールするために必要な情報は次の通り。
 
-* gitリポジトリのURI
-* （mainブランチ以外に格納した場合は）ブランチ名
+* gitリポジトリのURL
 
-pipコマンドに対して次のようにgitリポジトリのURIを指定します。
+pipコマンドに対して次のようにgitリポジトリのURLを指定して実行する。
 
-pip install git+https://[gitリポジトリのURI]
+pip install git+https://[gitリポジトリのURL]
 
-mainブランチ以外に格納している場合は、ブランチ名も含めて次のように指定します。
+ここでgitリポジトリのURLは、以下で表示されるGitHubリポジトリのClone用のURLを指定する。
 
-pip install git+https://[gitリポジトリのURI]@[ブランチ名]
+![GitHubリポジトリのURL](./images/git-https-url.png)
 
+なお、本サンプルでは先の説明とは異なり、リポジトリのルートでなくサブディレクトリ配下に配置している。
+この場合でも、URLフラグメント（アンカー）「`subdirectory`」を用いて対象のサブディレクトリを指定することで、
+インストールが可能。
+この場合の具体的なコマンドは次の通り。
 
-
-本章で用いたサンプルファイルの場合での、具体的なコマンド記載は次のようになります。
-pipコマンドの実行前に、仮想環境の構築が推奨されるのは、◆◆§3.2ローカルからのインストール　と同様です。
-
-pip install git+https://github.com/hoshimado/qiita-notes.git
-
-
-URLフラグメント（アンカー）「`subdirectory`」を用いて指定する。
-
+```
 pip install git+https://github.com/hoshimado/qiita-notes.git#subdirectory=qiita-python-packagebuild-setuppy
+```
 
+インストール後のパッケージの動作確認は、配布パッケージ作成の手順記事に記載の通りで次のコマンドを実行することで可能。
 
-
-ブランチの場合は「`@ブランチ名`」を付与する
-
-
-インストール後の動作確認。
+```
 python -m weatherforecast
+```
 
+参考までに、mainブランチ以外で配布を行いたい場合（例えばreleaseブランチなどがある場合）は、
+ブランチ名も含めて次のように指定することで対応可能。
 
+```
+pip install git+https://[gitリポジトリのURL]@[ブランチ名]
+```
 
-なお、gitコマンドがある前提なので、未導入の環境だと以下のエラーメッセ―で失敗する。
+なお本手順によるインストールは、gitコマンドがある前提で実施可能。
+gitコマンドが未導入の環境では、以下のエラーメッセージが表示されて失敗する。
 
-(.venv_wslpy39) /home/work # pip install git+https://github.com/hoshimado/tbf15-sample.git@chapter2section4-2-procedure-
-in-poetry-build
-Collecting git+https://github.com/hoshimado/tbf15-sample.git@chapter2section4-2-procedure-in-poetry-build
-  Cloning https://github.com/hoshimado/tbf15-sample.git (to revision chapter2section4-2-procedure-in-poetry-build) to /tmp/pip-req-build-jufbscdz
-  ERROR: Error [Errno 2] No such file or directory: 'git' while executing command git version
+```
+ERROR: Error [Errno 2] No such file or directory: 'git' while executing command git version
 ERROR: Cannot find command 'git' - do you have 'git' installed and in your PATH?
+```
 
+
+
+# GitHubのPrivateリポジトリに配布パッケージを配置する方法とインストール手順
+
+
+## リポジトリに参加しているGitHubユーザーに対して配布する
+
+【作成途中】
+
+自身の設定画面からアクセストークンを作成する
+
+https://github.com/settings/profile
+
+https://github.com/settings/tokens
+
+![](./images/github-user-token1.png)
+
+任意の名称を入力。リポジトリへのアクセスだけを許可（チェック）。
+
+![](./images/github-user-token2-new.png)
+
+下の方にあるボタン「Generate token」を押下する。
+
+![](./images/github-user-token3-created.png)
+
+※上記のアクセストークンは削除済みなので、悪しからず。
+
+
+
+## リポジトリに紐づけた環境（サーバー）に対して配布する
+
+https://github.com/[リポジトリ名]/settings/keys
+
+![](./images/github-repo-deploy-key1.png)
+
+![](./images/github-repo-deploy-key2-new.png)
 
 
 
