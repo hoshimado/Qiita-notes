@@ -108,7 +108,9 @@ GitHubのPublicリポジトリに配置された配布パッケージからpip�
 
 pipコマンドに対して次のようにgitリポジトリのURLを指定して実行する。
 
+```
 pip install git+https://[gitリポジトリのURL]
+```
 
 ここでgitリポジトリのURLは、以下で表示されるGitHubリポジトリのClone用のURLを指定する。
 
@@ -148,38 +150,134 @@ ERROR: Cannot find command 'git' - do you have 'git' installed and in your PATH?
 
 # GitHubのPrivateリポジトリに配布パッケージを配置する方法とインストール手順
 
+Privateリポジトリでも認証情報を設定することで、先の節と同様に
+配布パッケージの配布が可能である。
+リポジトリへの格納方法はPublicリポジトリと同じなので解説を割愛する。
+
+GitHubでのコマンドラインに対する認証方法はhttpsとsshの2つがある。
+それぞれ次のように使い分ける。
+
+* httpsでのPersonal Access Token認証
+  * これはGitHubユーザーに紐づく
+  * 対象リポジトリにアクセス可能なGitHubユーザーを特定して、配布する場合に適する
+* sshでの公開鍵認証
+  * これは認証されるサーバーに紐づく（認証す津サーバーでSSHキーペアを発行する）
+  * 配布先のサーバー（秘密鍵を保持するマシン）を特定して、配布する場合に適する
+
+なお、上記は「配布する側」の視点で論じている。
+このため「配布される側」の視点（取得先のリポジトリが複数あるケース）では
+適する方法の異なる場合があるが、今回は割愛する。
+
+
 
 ## リポジトリに参加しているGitHubユーザーに対して配布する
 
-【作成途中】
+pipインストールを行うユーザー側で、Personal Access Token（以降、「PAT」と略記）
+を発行して、それを含めてpipコマンドを実行する。
 
-自身の設定画面からアクセストークンを作成する
+PATの発行手順は次の通り。
 
-https://github.com/settings/profile
-
-https://github.com/settings/tokens
-
+1. 自身のGitHubユーザー設定画面へ入る
+    * https://github.com/settings/profile
+2. Developer Settings配下にある「Personal Access Toekns」をクリックする
+    * https://github.com/settings/tokens
 ![](./images/github-user-token1.png)
 
-任意の名称を入力。リポジトリへのアクセスだけを許可（チェック）。
-
+3. スコープとして「リポジトリへのアクセス」だけを許可（チェック）する
 ![](./images/github-user-token2-new.png)
 
-下の方にあるボタン「Generate token」を押下する。
+3. 下の方にあるボタン「Generate token」を押下する
+
+次の図のようjにPATが新規作成されるので、文字列（トークン）をコピーする。
+ここで、トークンの値を参照できるのはこのタイミングだけなので、
+忘れずにコピーすること。
+（※下図のアクセストークンは削除済みなので、悪しからず。）
 
 ![](./images/github-user-token3-created.png)
 
-※上記のアクセストークンは削除済みなので、悪しからず。
+
+pipコマンドに対して次のように、PATを含めたgitリポジトリのURLを指定して実行する。
+
+```
+pip install git+https://[PAT]@[gitリポジトリのURL]
+```
+
+これにより、privateリポジトリで公開されている
+配布パッケージをインストールすることができる。
+サブフォルダーやブランチの場合の指定方法は、
+Publicリポジトリの場合と同一。
 
 
 
 ## リポジトリに紐づけた環境（サーバー）に対して配布する
 
-https://github.com/[リポジトリ名]/settings/keys
+pipインストールを行うマシン環境（サーバー側）でSSHキーペアを作成し[^1]、
+その公開鍵をSSHキーとしてGitHubの対象のprivateリポジトリに
+「Deploy Keys」として登録する。
 
+[^1]: 手順としては、「サーバー側である必要はない」が意味付けとしてサーバーを認証するものなので、このように表現する。
+
+SSHキーの作成手順は次の通り。これはWindows 10環境でも実行可能（2018年に配信されたFall Creators Update 1709以降）。
+
+
+
+1. コマンドラインを開き、次のコマンドを実行する
+```
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+2. コマンドが「`Enter file in which to save the key:`」として保存先を聞いてくるので、SSHキーペアの保存ファイル名を指定（秘密鍵側のファイル名を含めたパスで指定。未入力でEnterキーを押すとデフォルト値が採用される）
+3. コマンドが「`Enter passphrase (empty for no passphrase):`」としてパスフレーズを聞いてきたら、未入力でEnterキーを押してSkipする
+4. 指定した保存先に、秘密鍵と公開鍵の2ファイルが保存される
+
+
+作成したSSHキーの公開鍵を「Deploy Keys」に登録する手順は次の通り。
+
+1. 作成した公開鍵（`*.pub`）を任意のテキストエディタ（メモ帳で可）で開く。
+2. 対象のprivateリポジトリの設定画面を開く
+3. 「Security ＞ Deploy keys】と辿る
+    * https://github.com/[リポジトリ名]/settings/keys
+4. 「Add Deploy key」ボタンを押す
 ![](./images/github-repo-deploy-key1.png)
-
+5. Key欄へ、先ほど開いた公開鍵の内容をまるごと貼り付ける
 ![](./images/github-repo-deploy-key2-new.png)
+6. ボタン「Add key」を押して保存する
+
+ここまでで、「Deploy Keys」へのサーバーの登録は環境。
+
+秘密鍵のファイルをpipコマンドの実行フォルダーの直下に
+`.ssh/deploy_key`
+と言うファイル名で配置するとする。
+このとき、登録したサーバー（＝秘密鍵を保有するサーバー）で
+pipコマンドを実行する際には次のようにする。
+
+```
+set GIT_SSH_COMMAND=ssh -i %CD:\=/%/.ssh/deploy_key
+pip install git+ssh://git@[gitリポジトリのURL]
+```
+
+上記の「gitリポジトリのURL」は、以下のリポジトリの「SSH」タブに
+表示されるURL【ではない】、ことに注意。
+![](./images/git-ssh-url.png)
+
+Publicリポジトリの場合と同様に「HTTPS」タブのURLを指定する
+（具体的には、gitub.comの後がコロンではなく【スラッシュ】になる。つまりユーザー名を指定しているわけ【ではない】）。
+
+ここで、「GIT_SSH_COMMAND」は
+【ここから追記】
+
+なお、上記の環境変数の設定方法はWindowsでの記法。
+Linux環境の場合は、次のようになる。
+Linux環境の場合は、秘密鍵ファイルのパーミッションを適切に設定する必要があることに注意。
+
+```
+chmod 400 .ssh/deploy_key
+export GIT_SSH_COMMAND="ssh -i $(pwd)/.ssh/deploy_key"
+```
+
+以上で、privateリポジトリで公開されている
+配布パッケージをインストールすることができる。
+サブフォルダーやブランチの場合の指定方法は、
+Publicリポジトリの場合と同一。
 
 
 
@@ -191,6 +289,13 @@ https://github.com/[リポジトリ名]/settings/keys
     * https://pip.pypa.io/en/latest/getting-started/
 * VCS Support - pip documentation
     * https://pip.pypa.io/en/latest/topics/vcs-support/#supported-vcs
+* GitHubへの認証方法について - GitHub Docs
+  * https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#authenticating-to-the-api-in-a--data-variablesproductprodname_actions--workflow
+* デプロイキーの管理 - GitHub Docs
+  * https://docs.github.com/ja/authentication/connecting-to-github-with-ssh/managing-deploy-keys
+* Git::GIT_SSH_COMMAND - git Documentation
+  * https://git-scm.com/docs/git#Documentation/git.txt-codeGITSSHCOMMANDcode
+
 
 
 
