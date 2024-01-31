@@ -7,13 +7,10 @@
 # 概要
 
 PyPI（パイ・ピーアイ）へ、配布パッケージをアップロードして公開するまでの手順。
-Python配布パッケージを作り終えたところから開始して、
-PyPIにアカウントを作成して配布パッケージを公開するところまでを解説。
-解説の粒度は「やってみた」とする。
-なお、「やってみた結果、こちらの順序の方が良い」は反映している。
+Python配布パッケージを作り終えたところから開始して、PyPIにアカウントを作成して配布パッケージを公開するところまでを解説。
+解説の粒度は「やってみた」とする。なお、「やってみた結果、こちらの順序の方が良い」は反映している。
 
-手順としては、以下の記事の続きの位置づけとなる。
-Setup.pyを前提としているが、pyproject.tomlでも配布パッケージへの設定部分の読み替えのみで対応可能。
+手順としては、以下の記事の続きの位置づけとなる。Setup.pyを前提としているが、pyproject.tomlでも配布パッケージへの設定部分の読み替えのみで対応可能。
 
 * [Pythonソースコードをパッケージ化する方法（他環境へ配布を目的として）（Setup.py利用）](https://qiita.com/hoshimado/items/7c99e6ef4c9d1bc6bb87)
 
@@ -21,10 +18,9 @@ Setup.pyを前提としているが、pyproject.tomlでも配布パッケージ�
 
 # 想定読者
 
-ToDo：後で書く
-* Pythonコードの開発において、GitHubリポジトリを利用している方
-* pipによる配布パッケージの配布に、これから取り組みたい方
-* PyPIリポジトリ利用よりも手軽に、もしくは範囲を限定して配布したい方
+* Pythonの配布パッケージ（`*.whl`）を作成したので、PyPIで公開してみたい方
+* PyPIへの2024年1月時点での最新の具体的な手順を知りたい方
+    * APIトークンが必須になったり、2FA認証が必須になったり、と細々？とした更新が成されている（公式サイトに一通り書いてはあるけれど）
 
 
 
@@ -41,15 +37,13 @@ ToDo：後で書く
 
 # サンプルコード
 
-検証に用いた配布パッケージのサンプルコードは以下で取得可能。
+検証に用いたサンプルのコードは以下で取得可能。
 
 https://github.com/hoshimado/open-meteo-weather-sample-jpcity
 
 PyPIでの公開リポジトリは以下。
 
-https://pypi.org/project/open-meteo-weather-sample-jpcity/0.0.dev1/
-
-
+https://pypi.org/project/open-meteo-weather-sample-jpcity/
 
 
 
@@ -58,22 +52,26 @@ https://pypi.org/project/open-meteo-weather-sample-jpcity/0.0.dev1/
 本記事では、PyPIで公開する配布パッケージとして次の仕様のサンプルコードを用いる。
 
 * パッケージの本体は`open_meteo_weather_sample_jpcity`フォルダー
-  * フォルダー内のPythonファイル`open_meteo_forecast_api.py`にて、「[Open-Meteo](https://open-meteo.com/)」が提供するWeb APIを利用して指定地点の向こう1週間の1h毎の予想気温を取得する関数「`get()`」を提供する
-* 依存関係としてパッケージ「[requests](https://pypi.org/project/requests/)」を必要とする
-* `setup.py`が置かれている位置で、コマンド`python setup.py bdist_wheel`を実行すること配布パッケージ（`*.whl`）が作成できるように設定済みである
-* 同様jに、コマンド`python setup.py sdist`を実行することで、配布ソースファイルが作成できるように設定済みである
+  * フォルダー内のPythonファイル`open_meteo_forecast_api.py`にて、「[Open-Meteo](https://open-meteo.com/)」が提供するWeb APIを利用して指定地点の向こう1週間の1h毎の予想気温を取得する関数「`get()`」を提供
+* 依存関係としてパッケージ「[requests](https://pypi.org/project/requests/)」が必要
+* `setup.py`が置かれている位置で、コマンド`python setup.py bdist_wheel`を実行すること配布パッケージ（`*.whl`）が作成できるように設定済み
+* 同様に、コマンド`python setup.py sdist`を実行することで、配布ソースファイルが作成できるように設定済み
+* pytestによるテストコードも設定済み（なお、これ自体は配布パッケージの作成に必須ではない）
 
 ```
 +-- requirements.txt
 +-- setup.py
 |   
-\---open_meteo_weather_sample_jpcity/
-    +-- open_meteo_forecast_api.py
-    +-- __init__.py
-    +-- __main__.py        
++---open_meteo_weather_sample_jpcity/
+|   +-- open_meteo_forecast_api.py
+|   +-- __init__.py
+|   +-- __main__.py        
+|
+\--- tests/
+    +-- test_open_meteo_forecast_api.py
 ```
 
-以下、このフォルダー構造を前提に追加ファイルなどを説明していく。
+以下、このフォルダー構造を前提に、追加ファイルなどを説明していく。
 
 
 
@@ -82,25 +80,21 @@ https://pypi.org/project/open-meteo-weather-sample-jpcity/0.0.dev1/
 PyPIへ配布パッケージを登録して公開するまでの手順は次の通り[^1]。
 
 1. 配布パッケージを、PyPI公開用に整える（名称や説明文など）
-2. PyPIアカウントを作成（初回のみ）
-3. PyPIリポジトリへのアクセストークンを作成（アクセス範囲ごとに初回のみ）
+2. PyPIアカウントを作成（**初回のみ**）
+3. PyPIリポジトリへのアクセストークンを作成（アクセス範囲ごとに**初回のみ**）
 4. 配布パッケージをPyPIへアップロードする
 5. アップロードした配布パッケージをpipでインストールできることを確認する
 
 [^1]: 公式ガイドの「パッケージングとプロジェクトの配布」で案内されている手順に従う。 - https://packaging.python.org/ja/latest/guides/distributing-packages-using-setuptools/
 
-アップロードコマンドは「`twine`」を用いる。
-未インストールの場合は、以下のコマンドで事前にインストールしておく。
+PyPIへアップロードするコマンドは「`twine`」を用いる。未インストールの場合は、以下のコマンドで事前にインストールしておく。
 
 ```
 python -m pip install twine
 ```
 
 
-ここで、配布パッケージをPyPI公開用に設定しようとして
-「（何らかの理由で）必要な設定ができない」場合はその後のPyPIアカウント作成などは無意味なる。
-そのため「公開用の仕様を満たす設定ができるか？」を最初に確認する目的で、
-PyPIアカウント作成の前に「整える」工程をするのが妥当と、実際にやってみて思う。
+ここで、配布パッケージをPyPI公開用に設定しようとして「（何らかの理由で）必要な設定ができない」場合は、その後のPyPIアカウント作成などが無意味なる。そのため「公開用の仕様を満たす設定ができるか？」を最初に確認する目的で、PyPIアカウント作成の前に「整える」工程をするのが妥当と、実際にやってみて思う。
 
 以下、配布パッケージ（`*.whl`）と配布ソースファイル（`*.tar.gz`）の作成が終わっている前提で、上述の手順の詳細を解説する。
 
@@ -108,12 +102,11 @@ PyPIアカウント作成の前に「整える」工程をするのが妥当と�
 
 ## 配布パッケージを、PyPI公開用に整える
 
-本記事では、`setup.py`での配布パッケージ作成を前提にするので、`pyproject.toml`利用時は適宜読み替えのこと（その際は、上述の公式ガイド「パッケージとプロジェクトの配布」の前節に「pyproject.tomlを書く」[^2]があるので、そちらを参照のこと）
+本記事では、`setup.py`での配布パッケージ作成を前提にするので、`pyproject.toml`利用時は適宜読み替えのこと（その際は、上述の公式ガイド「パッケージとプロジェクトの配布」の前節に「pyproject.tomlを書く」[^2]があるので、そちらを参照）
 
 [^2]: https://packaging.python.org/ja/latest/guides/writing-pyproject-toml/
 
-PyPIに公開する配布パッケージは最低限、次を満たす必要がある。
-満たしていない場合は変更と作成を行う。
+PyPIに公開する配布パッケージは最低限、次を満たす必要がある。満たしていない場合は変更と作成を行う。
 
 * (A) 配布パッケージ名称が、PyPIの名称仕様を満たし且つ重複がないものであること
   * 配布パッケージ名称とパッケージのフォルダー名称は一致していることが望ましいので、このタイミングでパッケージのフォルダー名も必要に応じて変更する
@@ -121,6 +114,7 @@ PyPIに公開する配布パッケージは最低限、次を満たす必要が�
 * (C) ライセンスファイルを含むこと
 
 上記以外（バージョンや依存PKGなど）は、配布パッケージ（`*.whl`）を作成する時点で満たしているはずなので、省略。
+
 なお、バージョンは「PyPIへの登録自体の検証中のバージョン」として「開発中」を位置付ける目的で、次のようにした[^3]。
 
 ```
@@ -143,14 +137,12 @@ setuptools.setup(
   * 大文字小文字は区別しない
   * アンダースコア、ハイフン、ピリオドは区別せず、すべてハイフンとして扱う
   * ハイフンが連続した場合は、1つのハイフンとして扱う
-  * 完全一致でなくとも誤認し得るような「似た名称」は区別しない
+  * 完全一致**しない**場合でも、誤認し得るような「似た名称」は区別しない
 * プロジェクト名が、PyPIの管理者によって明示的に禁止されているものを避けること[^4]
 
 [^4]: https://test.pypi.org/help/#project-name
 
-当方の場合は、当初の配布パッケージの名称を「weatherforecast」としていた。
-既存の公開済みパッケージの有無は、PyPIのサイトに対して次のようにURLを打つ事で、
-確認できる。
+当方の場合は、当初の配布パッケージの名称を「weatherforecast」としていた。既存の公開済みパッケージの有無は、PyPIのサイトに対して次のようにURLを打つ事で、確認できる。
 
 ```
 https://pypi.org/project/[配布パッケージ名称]/
@@ -163,14 +155,13 @@ https://pypi.org/project/weatherforecast/
 ```
 
 ・・・とは、問屋が下ろさない。
-後の方で実際にアップロードを行うと、次のエラー「似た名称がある」にヒットして登録できなかった。
+後の方で実際にアップロードを行うと、次のエラー「似た名称がある」にヒットして**登録できなかった**。
 
 ```
 The name 'weatherforecast' is too similar to an existing project. 
 ```
 
-これは、既存の配布パッケージとして「weather-forecast」が存在するためであった。
-なので配布パッケージ名を「open-meteo-weather-sample-jpcity」に変更した。
+これは、既存の配布パッケージとして「weather-forecast」が存在するため。なので配布パッケージ名を「open-meteo-weather-sample-jpcity」に変更した。
 
 ※今回、「サンプルであること」と「サンプルの内容が一目瞭然であること」を最優先とし、「なるべく短い方が良い」は諦めた。
 
@@ -178,10 +169,7 @@ The name 'weatherforecast' is too similar to an existing project.
 
 * [PyPIにアップロード時のエラー「The name XXX; is too similar to an existing project.」に泣かないために](https://qiita.com/ky5bass/items/2cd18f072eb8cee0775a)
 
-`setup.py`に記載する配布パッケージ名称を変更したら、パッケージフォルダー名も合わせて変更しておく。
-注意すべきは、「配布パッケージ名はハイフンが推奨」（アンダースコアなどはハイフンと同一視される）
-なのに対して、「パッケージフォルダー名はアンダースコアを用いる」と言う差があること。
-なので、`setup.py`での該当部分は次のように記載する。
+`setup.py`に記載する配布パッケージ名称を変更したら、パッケージフォルダー名も合わせて変更しておく。注意すべきは、「配布パッケージ名は**ハイフン**が推奨」（アンダースコアなどはハイフンと同一視される）なのに対して、「パッケージフォルダー名は**アンダースコア**を用いる」と言う差があること。なので、`setup.py`での該当部分を次のように記載する。
 
 ```
 setuptools.setup(
@@ -197,10 +185,8 @@ setuptools.setup(
 
 ### (B) readmeファイルを含むこと
 
-配布パッケージが「どういうものか？」を記載したファイルを作成する。
-このファイルはPyPIのページに表示される内容となる。
-作成せずともPyPIへの登録は可能だが、無しだと「（パッケージについての）説明はありません」表示になるので、
-概ね必須で作成すべきだろう。
+配布パッケージが「どういうものか？」を記載したファイルを作成する。このファイルはPyPIのページに表示される内容となる。作成せずともPyPIへの登録は可能だが、無しだと「（パッケージについての）説明はありません」表示になるので、概ね必須で作成すべきだろう。
+
 ファイル形式はいくつかサポートされているが、当方が慣れ親しんでいるmdファイルを採用する。
 
 作成したREADME.mdファイルからテキスト文字列を読み込み、次のように`setup()`の引数`long_description`へ渡す。
@@ -219,10 +205,7 @@ setuptools.setup(
 
 ### (C) ライセンスファイルを含むこと
 
-配布パッケージのライセンスを記載したファイルを作成して`LICENSE.txt`のファイル名で格納する。
-今回の例でMITライセンスとしているので、
-GitHubリポジトリ作成時に生成したMITライセンスファイルをコピーして
-`LICENSE.txt`のファイル名にリネームして`setup.py`と同じ位置に格納する。
+配布パッケージのライセンスを記載したファイルを作成して`LICENSE.txt`のファイル名で格納する。今回の例でMITライセンスとしているので、GitHubリポジトリ作成時に生成したMITライセンスファイルをコピーして`LICENSE.txt`のファイル名にリネームして`setup.py`と同じ位置に格納する。
 
 
 
@@ -230,11 +213,9 @@ GitHubリポジトリ作成時に生成したMITライセンスファイルを�
 ## PyPIアカウントを作成（初回のみ）
 
 PyPIのアカウント作成する。
-なお、試行用としてTestPyPIリポジトリが用意されているので、
-最初はTestPyPIにアカウントを作成してアップロードまで実施確認を行うのが良いかもしれない。
+なお、試行用としてTestPyPIリポジトリが用意されているので、最初はTestPyPIにアカウントを作成してアップロードまで実施確認を行うのが良いかもしれない。
 
-PyPIとTestPyPIは、アカウント作成手順とその後の公開手順も含めて、
-**公開先リポジトリのみが異なり**、それ以外は同一。
+PyPIとTestPyPIは、アカウント作成手順とその後の公開手順も含めて、**公開先リポジトリのみが異なり**、それ以外は同一。
 
 アカウント作成に必要な入力情報は次の通り。
 
@@ -247,11 +228,10 @@ PyPIとTestPyPIは、アカウント作成手順とその後の公開手順も�
 * TOTPアプリケーション
 
 TOTPアプリケーションの具体的な選択肢としては、
-Google AuthenticatorやMicrosoft Authenticatorなど。
-当方はすでに利用中であったMicrosoft Authenticatorアプリを用いた。
+Google AuthenticatorやMicrosoft Authenticatorなど。当方はすでに利用中であったMicrosoft Authenticatorアプリを用いた。
 
 
-PyPIサイトにある以下の登録フォームから登録することで、アカウントを作成できる。
+PyPIサイトにある以下の登録フォームのページから上述の情報を入力して登録することで、アカウントを作成できる。
 
 https://pypi.org/account/register/
 
@@ -342,6 +322,7 @@ twine upload --repository testpypi dist/*
 PyPIアカウントのユーザー名とパスワード【ではない】ので注意。
 
 * username: `__token__`
+    * この値は固定値。 
 * password: `[先の節で作成したAPIトークン]`
 
 次のように表示されたら、アップロード成功。
@@ -359,9 +340,10 @@ https://test.pypi.org/project/XXX/M.M.R/
 ```
 
 なお、毎回にusernameとパスワードを入力するのが面倒な場合は、
-`.pypirc`ファイルにAPIトークンを設定することで毎回の入力を省略できる[^4]。
+`.pypirc`ファイルにAPIトークンを記載することで、
+`twine`コマンド実行毎の入力を省略できる[^5]。
 
-[^4]: https://packaging.python.org/ja/latest/specifications/pypirc/
+[^5]: https://packaging.python.org/ja/latest/specifications/pypirc/
 
 
 
@@ -370,12 +352,26 @@ https://test.pypi.org/project/XXX/M.M.R/
 PyPIにアップロードした配布パッケージからインストールができるか？を確認する。
 前の節で確認した「`View at:`」に表示されたURLをブラウザーで開く。
 このページが、配布パッケージのPyPIでの公開ページとなる。
-冒頭にインストールコマンドが記載されているので、そちらにしたがいインストールを行い、
+ページの冒頭にインストールコマンドが記載されているので、そちらにしたがいインストールを行い、
 成功したら確認は完了。
 
-なお、TestPyPIの場合は依存パッケージ側の取得に失敗する
+参考までに、本記事で用いているサンプルの配布パッケージのインストールコマンドは次の通り。
+
+```
+pip install open-meteo-weather-sample-jpcity
+```
+
+実行コマンドは次の通り。
+
+```
+python -m open_meteo_weather_sample_jpcity
+```
+
+
+なお、TestPyPIリポジトリからのインストールの場合は、
+依存パッケージ側の取得に失敗する
 （テスト用のリポジトリであり、通常のPyPIと同様のパッケージが存在するとは限らないため）
-場合があることに注意。
+場合があることに注意。TestPyPIリポジトリはあくまで「リポジトリへの公開」操作の評価環境。
 
 また、次のようなエラーメッセージが出ることがあるが、
 これはリポジトリ側への配布パッケージの反映が追い付いていないだけなので、
@@ -388,6 +384,8 @@ ERROR: No matching distribution found for XXX==M.m.r
 ```
 
 
+以上。
+
 
 
 
@@ -399,16 +397,9 @@ ERROR: No matching distribution found for XXX==M.m.r
 
 # 参考サイト
 
-* Getting Started - pip documentation
-    * https://pip.pypa.io/en/latest/getting-started/
-* VCS Support - pip documentation
-    * https://pip.pypa.io/en/latest/topics/vcs-support/#supported-vcs
-* GitHubへの認証方法について - GitHub Docs
-  * https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#authenticating-to-the-api-in-a--data-variablesproductprodname_actions--workflow
-* デプロイキーの管理 - GitHub Docs
-  * https://docs.github.com/ja/authentication/connecting-to-github-with-ssh/managing-deploy-keys
-* Git::GIT_SSH_COMMAND - git Documentation
-  * https://git-scm.com/docs/git#Documentation/git.txt-codeGITSSHCOMMANDcode
+* パッケージングとプロジェクトの配布 - Python Packaging User Guide
+    * https://packaging.python.org/ja/latest/guides/distributing-packages-using-setuptools/
+
 
 
 
