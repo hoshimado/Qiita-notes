@@ -279,7 +279,7 @@ PyPIにログインした状態で「アカウント設定＞二要素認証」�
 その下部にあるボタン「Add 2FA with authentication application」が
 有効になるので、そのボタンを押す。
 
-![](images/PyPI-test-register07.png)
+![2FA登録画面](images/PyPI-test-register07.png)
 
 リカバリーコードを1つ入力要求された後、
 TOTPアプリケーション用のQRコードが表示される。
@@ -308,7 +308,8 @@ APIトークンが作成されるので、任意の場所に記録する。
 配布パッケージを公開後に、選択ができるようになる（ぇ）。
 2回目以降にAPIトークンを作成する時に絞り込む用途かな？
 
-![](images/PyPI-test-register08.png)
+![APIトークンのスコープ](images/PyPI-test-register08.png)
+
 
 
 ## 配布パッケージをアップロードする
