@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { onMounted, ref, useTemplateRef, onBeforeUnmount } from 'vue';
 import { Dropdown, Modal } from 'bootstrap/dist/js/bootstrap.min';
 
 const _generateUUID = () => window.crypto.randomUUID();
@@ -46,12 +46,33 @@ const onDropdownItemClickCustom = (selectedId) => {
     }
 };
 
+const debugMsgDropdownCustom2 = ref('');
+const elemDropdownList2Parent = useTemplateRef('refDropdownListParent');
+const _listenerHiddenBsDropdown = (event) => {
+    console.log('hidden.bs.dropdown', event);
+    debugMsgDropdownCustom2.value = 'ドロップダウンリストが閉じられました。';
+};
+
 onMounted(()=>{
     // モーダルダイアログの初期化
     bsModalDialog1 = Modal.getOrCreateInstance(document.getElementById(scopedIdModalDialog1.value));
 
-    // ドロップダウンリストの処理
+    // ドロップダウンリスト1の処理
     bsDropdownList = Dropdown.getOrCreateInstance(elemDropdownList.value);
+
+    // ドロップダウンリスト2の処理
+    elemDropdownList2Parent.value.addEventListener(
+        'hide.bs.dropdown', 
+        _listenerHiddenBsDropdown
+    );
+});
+onBeforeUnmount(() => { // https://ja.vuejs.org/api/composition-api-lifecycle#onunmounted
+    // https://vueuse.org/core/useEventListener/ を使えば、umount時のこの考慮は
+    // 不要となるが、そのためだけにimportするほどでもない、ので自前で実装する。
+    elemDropdownList2Parent.value.removeEventListener(
+        'hidden.bs.dropdown', 
+        _listenerHiddenBsDropdown
+    );
 });
 </script>
 
@@ -79,7 +100,6 @@ onMounted(()=>{
             <button 
                 class="btn btn-secondary dropdown-toggle" 
                 type="button" 
-                id="dropdownMenuButton" 
                 data-bs-toggle="dropdown" 
                 aria-expanded="false"
             >
@@ -165,7 +185,7 @@ onMounted(()=>{
     </div>
     <hr><!-- ============================================= -->
     <div>
-        <h3>動的コンポーネント：ドロップダウンリスト（Dropdowns）、動作カスタム</h3>
+        <h3>動的コンポーネント：ドロップダウンリスト（Dropdowns）、動作カスタム１</h3>
         <div class="input-group dropdown">
             <input 
                 type="text" 
@@ -180,7 +200,7 @@ onMounted(()=>{
                 data-bs-toggle="dropdown" 
             ></button>
             <ul 
-                class="dropdown-menu dropdown-menu-end" 
+                class="dropdown-menu" 
                 ref="refDropdownList"
             >
                 <li 
@@ -192,6 +212,33 @@ onMounted(()=>{
                     {{item.name}}
                 </li>
             </ul>
+        </div>
+    </div>
+    <hr><!-- ============================================= -->
+    <div>
+        <h3>動的コンポーネント：ドロップダウンリスト（Dropdowns）、動作カスタム２</h3>
+        <div class="dropdown">
+            <button 
+                class="btn btn-secondary dropdown-toggle" 
+                type="button" 
+                data-bs-toggle="dropdown" 
+                aria-expanded="false"
+                ref="refDropdownListParent"
+            >
+                ドロップダウンリスト
+            </button>
+            <ul class="dropdown-menu">
+                <li 
+                    v-for="item in dropdownItems" 
+                    :key="item.id"
+                    class="dropdown-item"
+                >
+                    {{item.name}}
+                </li>
+            </ul>
+        </div>
+        <div>
+            [Debug]ドロップダウンリストの操作: {{debugMsgDropdownCustom2}}
         </div>
     </div>
 </div>
