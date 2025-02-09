@@ -1,23 +1,22 @@
 # 概要
 
-Vue3でBootStrapを使う方法を説明します。
-ここでは、BootStrapVueではなく、オリジナルのBootStrap v5を利用する手法について解説します。  
+Vue.js v3(以降、Vue3と略記)でBootstrapを使う方法を説明します。
+ここでは、[BootstrapVue](https://bootstrap-vue.org/)ではなく、オリジナルの[Bootstrap v5](https://getbootstrap.jp/docs/5.3/getting-started/introduction/)を利用する手法について解説します。  
 なお、本記事は自分用のメモとして作成しているため、細かい補足や個人向けの実装例を多く含んでいます。
 
 ## 目的
 
 本記事の目的は以下の通りです。
 
-* Vue3上にてBootStrap v5を簡単に使えるようにする
+* Vue3上にてBootstrap v5を簡単に使えるようにする
 
 ### 背景
 
-BootStrapをVueなどのフレームワーク上で利用する場合、DOM操作がフレームワークと競合する可能性があるため、フレームワーク固有のパッケージ（例: BootstrapVue）の利用が推奨されます[^1]。  
-しかし、BootstrapVueは現時点でVue3に未対応であるため、今回はオリジナルのBootStrap v5を直接利用する方法を採用します。  
-BootStrapに不慣れな方が、とりあえずVue3上でBootStrapを扱う方法の一例として参考にしてください。
+BootstrapをVueなどのフレームワーク上で利用する場合、DOM操作がフレームワークと競合する可能性があるため、フレームワーク固有のパッケージ（例: BootstrapVue）の利用が推奨されます[^1]。  
+しかし、BootstrapVueは現時点でVue3に未対応であるため、今回はオリジナルのBootstrap v5を直接利用する方法を採用します。  
+Bootstrapに不慣れな方がとりあえずVue3上でBootstrapを扱う方法、の一例として参考ください。
 
-[^1]: Bootstrap JavaScriptによるDOM操作が、各フレームワーク（Vue.jsなど）と競合する可能性があり、完全な互換性は保証されないためです。  
-https://getbootstrap.jp/docs/5.3/getting-started/javascript/
+[^1]: Bootstrap JavaScriptによるDOM操作が、各フレームワーク（Vue.jsなど）と競合する可能性があり、完全な互換性は保証されないためです。https://getbootstrap.jp/docs/5.3/getting-started/javascript/
 
 ## 想定読者
 
@@ -25,11 +24,29 @@ https://getbootstrap.jp/docs/5.3/getting-started/javascript/
 
 * Vue3で簡単なWebアプリ（ToDo管理など）を作成できる方
 * Composition API記法を使用している方
-* BootstrapVueの使用経験はあるが、オリジナルのBootStrapは未経験の方
+* BootstrapVueの使用経験はあるが、オリジナルのBootstrapは未経験の方
 
 ## 動作環境（検証環境）
 
-（記事完成後に記載）
+```
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "vue": "^3.5.13"
+  },
+```
+
+## サンプルコード
+
+本記事に掲載のサンプルコードは抜粋のため、コード全体は以下を参照ください。
+
+https://github.com/hoshimado/qiita-notes/blob/main/qiita-vue3-bootstrap5/intro-bootstrap5-in-vue3/src/components/MyClient.vue
+
+Vue3のプロジェクトとしてのルートは以下です。
+ご自身の環境で手軽に動作確認する際には、こちらの配下を取得ください。
+
+https://github.com/hoshimado/qiita-notes/blob/main/qiita-vue3-bootstrap5/intro-bootstrap5-in-vue3
+
 
 ---
 
@@ -37,14 +54,14 @@ https://getbootstrap.jp/docs/5.3/getting-started/javascript/
 
 以下の手順で説明します。
 
-1. Vue3へのBootStrap v5の導入方法
+1. Vue3へのBootstrap v5の導入方法
 2. 静的コンポーネントの記述方法
 3. 動的コンポーネントの記述方法
 4. 動的コンポーネントの動作をカスタマイズする方法
 
 ---
 
-## 1. Vue3へのBootStrap v5の導入方法
+## 1. Vue3へのBootstrap v5の導入方法
 
 ### 前提となるVue3のプロジェクト作成手順
 
@@ -54,7 +71,7 @@ https://getbootstrap.jp/docs/5.3/getting-started/javascript/
 npm init vue@latest
 ```
 
-この例では、プロジェクト名を「`intro-bootstrap5-in-vue3`」とし、その他の設定はデフォルト（ESLintのみ「y」）で作成します。
+この例では、プロジェクト名を「`intro-bootstrap5-in-vue3`」とし、その他の設定はデフォルト（ただし、ESLintのみ「y」に変更）で作成します。
 
 実行例:
 
@@ -82,7 +99,7 @@ Done. Now run:
   npm run dev
 ```
 
-### 作成したVue3へBootStrapを導入する手順
+### 作成したVue3へBootstrapを導入する手順
 
 作成したプロジェクトフォルダー（例：`intro-bootstrap5-in-vue3`）内で、以下の手順に従います。
 
@@ -122,19 +139,17 @@ Done. Now run:
 
 これで、プロジェクト全体でBootstrapのスタイルとJavaScriptが使用可能になります[^4]。
 
-[^4]: ツリーシェイキングの観点から、`import 'bootstrap/dist/js/bootstrap.min.js'`ではなく個々のコンポーネント内で`import { Button } from bootstarp`等のように必要なコンポーネントのみ読み込むことを推奨される事が多いです。しかし、静的なコンポーネントや既定の動作の範囲の動的なコンポーネントを使う場面での可読性、理解の簡単さ（`main.js`で読み込んでおけば、動的なカスタマイズを行わない限り個々のコンポーネント内で考慮しなくて良い）を優先し、本記事では`main.js`でBootStrap全体を読み込む方法を採用します。
+[^4]: 実は、`import 'bootstrap/dist/js/bootstrap.min.js'`を記述しなくとも`import 'bootstrap/dist/css/bootstrap.min.css'`さえ記述すれば、本サンプルコードの範囲では問題なく動作する。 https://getbootstrap.jp/docs/5.0/getting-started/introduction/#components で「JavaScriptとPopperを明示的に必要としている」コンポーネントとして明記されている「Collapse」や「Dropdowns」を含んでいるのにもかかわらず！　・・・これの背景は不明（追ってない）。可能性としては、Vitaでのトランスパイル時にいい感じにjs側も補完解釈して読み込んでいる可能性が無いわけでは無いが、、、何故に動く？？？教えてエロい人！
 
 ---
 
-## 2. BootStrapの静的コンポーネントの記述方法
+## 2. Bootstrapの静的コンポーネントの記述方法
 
-最初に、静的なコンポーネント、つまりJavaScriptによる動作的な動作を伴わず、
-Bootstrapの標準CSSクラスのみで見た目やレイアウトが実現されている
-コンポーネントを用いる方法について解説します。
+最初に、静的なコンポーネント、つまりJavaScriptによる動的な表示を伴わず、Bootstrapの標準CSSクラスのみで見た目やレイアウトが実現されているコンポーネントを用いる方法について解説します。
 
 ### 例1: ボタン
 
-以下のように、CSSクラスを適用するだけで、Bootstrapのコンポーネントをとして利用できます。
+以下のように、Bootstrapの定義済みCSSクラス（ここでは`btn btn-primary form-control`が該当）を適用するだけで、Bootstrapのコンポーネントをとして利用できます。
 
 ```html
 <button class="btn btn-primary">Primary Button</button>
@@ -167,25 +182,18 @@ const inputText = ref('')
 
 ---
 
-## 3. BootStrapの動的コンポーネントの記述方法
+## 3. Bootstrapの動的コンポーネントの記述方法
 
-続いて、動的な表示を伴なうコンポーネントを、
-BootStrapの既定の動作仕様のままに利用する方法、
-つまりJavaScriptによる動作カスタマイズを行わずに用いる場合の
-方法を説明します。
+続いて、動的な表示を伴なうコンポーネントを、Bootstrapの既定の動作仕様のままに利用する方法（動作カスタマイズを行わずに用いる場合の方法）を説明します。
 
-Bootstrapの標準仕様の動作を利用する場合、
-追加でのJavaScriptの記述は不要です。
+Bootstrapの標準仕様の動作を利用する場合、追加でのJavaScriptの記述は不要です。
 
 ここでは、ドロップダウンリスト（Dropdowns）とコラプス（collapse）を例にとります。
 
 
 ### 例1: ドロップダウンリスト（Dropdowns）
 
-dropdownクラスが指定された要素の配下において、
-属性data-bs-toggleが付与された要素のクリックをトリガーとして、
-同じ配下のdropdown-menuクラスが付与された要素をターゲットとして表示と非表示をトグルする仕様のため、
-トグルする対象を明示するためにidなどを指定する必要はありません。
+Dropdownsコンポーネントは、dropdownクラスが指定された要素の配下において、属性data-bs-toggleが付与された要素のクリックをトリガーとして同じ配下のdropdown-menuクラスが付与された要素の表示と非表示をトグルする仕様です。このため、トグル対象を明示するためのidなどを指定する必要はありません。
 
 ```html
 <template>
@@ -209,16 +217,12 @@ dropdownクラスが指定された要素の配下において、
 
 ### 例2: コラプス（collapse）
 
-コラプスとして開閉する要素を特定する（指定する）には、idを用います。
-Vueコンポーネントの再利用性を考慮するとidを即値で書くのは望ましくないので、
-動的に管理することで再利用時のid衝突を回避します。
+コラプスとして開閉する要素を特定する（指定する）には、idを用います。Vueコンポーネントの再利用性を考慮するとidを即値で書くのは望ましくないので、動的に管理することで再利用時のid衝突を回避します。
 
-この例では、idはコンポーネント内でしか参照しない前提でUUIDを用いて実装しています
-開閉するボタン側のidはコンポーネント外から参照の可能性があるが、
-コラプス要素自体はボタンからしか参照されれないため、このようにしています。
-一方で、テストの観点から「コンポーネント外からも参照する」場合は、
-付与するidを親コンポーネントからprops経由で渡す実装が望ましいです。
+この例では、コラプス要素のidがコンポーネント内でしか参照されない前提で、動的なUUIDを用いて実装しています[^5]。開閉するボタン側のidはコンポーネント外から参照の可能性がありますが、コラプス要素自体はボタンからしか参照されないため、このようにしています。
+なお、テストの観点から「コンポーネント外からも参照する」場合は、付与するidを親コンポーネントからprops経由で渡して子コンポーネントの再利用時のid衝突を回避がする（idを親コンポーネント側で管理する）など実装が望ましいです。
 
+[^5]: `const _generateUUID = () => window.crypto.randomUUID()`としてラッパーしてから利用しているのは、このIDの生成ロジックを後から差し替える可能性を考慮しているため。とりあえず windowオブジェクトのcryptoモジュールを用いているが、条件によっては（例えば単体テスト環境など）これ以外のモジュールを用いる方が望ましいことも少なくないため。
 
 ```vue
 <script setup>
@@ -261,18 +265,13 @@ const scopedIdCollapse1 = ref(_generateUUID())
 ### 例1: モーダルダイアログ（Modal）
 
 モーダルダイアログとして表示する要素を特定する（指定する）には、data-bs-target属性とidを用います。
-その際に、Vueコンポーネントの再利用性を考慮して動的にidを指定する実装とするのは、
-コラプス（collapse）と同じです。
+その際に、Vueコンポーネントの再利用性を考慮して動的にidを指定する実装とするのは、コラプス（collapse）と同じです。
 
-組み込みの閉じる操作を行うコントローラーにdata-bs-dismiss属性を付与することで、
-ここまではコラプスと同様に表示と非表示をJavaScriptを個別に実装すること無く実現できます。
+組み込みの閉じる操作を行うコントローラーにdata-bs-dismiss属性を付与することで、ここまではコラプスと同様に表示と非表示をJavaScriptを個別に実装すること無く実現できます。
 
-異なるのは、OKボタンが押され時の動作です。こちらは、押された時のイベントを
-`@click="onConfirmModalDialog1"`で受け取り、そのメソッド内で明示的に
-`bsModalDialog1.hide()`を用いてダイアログを閉じる処理を行う実装としています。
+異なるのは、OKボタンが押され時の動作です。こちらは、押された時のイベントを`@click="onConfirmModalDialog1"`で受け取り、そのメソッド内で明示的に`bsModalDialog1.hide()`を用いてダイアログを閉じる処理を行う実装としています。
 
-`bsModalDialog1`インスタンスは、`Modal.getOrCreateInstance()`とidを用いて対象の
-モーダル要素に紐づけておきます。
+`bsModalDialog1`インスタンスは、`Modal.getOrCreateInstance()`を用いて生成することで、idを経由して対象のモーダル要素に紐づけておきます。
 
 ```vue
 <script setup>
@@ -345,17 +344,12 @@ onMounted(() => {
 
 ### 例2-1: ドロップダウンリスト（Dropdowns）
 
-先に示した、デフォルト動作のDropdownsとは異なり、
-ドロップダウンリスト内部をクリックされた時に必ず閉じるのではなく、
-閉じる場合と閉じない場合に分岐させる実装例を説明します。
+先に示した、デフォルト動作のDropdownsとは異なり、ドロップダウンリスト内部をクリックされた時に必ず閉じるのではなく、閉じる場合と閉じない場合に分岐させる実装例を説明します。
 
-これは、リスト内部のクリック時を閉じる対象外としたうえで、
-閉じるときには自前のJavaScriptを用いて閉じる操作を行う事で実現できます[^5]。
-この例では、Dropdownsではidによる指定が不要なので、
-操作用のDropdownsインスタンスを取得する際に、モーダルダイアログとは異なり
-idを経由せずにVueのref属性を用いて直接に要素を指定する方法を採用しています。
+これは、リスト内部のクリック時を閉じる対象外としたうえで、閉じるときには自前のJavaScriptを用いて閉じる操作を行う事で実現できます[^6]。
+この例では、Dropdownsではidによる指定が不要なので、操作用のDropdownsインスタンスを取得する際に、モーダルダイアログとは異なりidを経由せずにVueのref属性を用いて直接に要素を指定する方法を採用しています。
 
-[^5]: デフォルト動作は「ドロップダウンリストの内外のいづれかがクリックされたら閉じる」であり属性`data-bs-auto-close="true"`が設定されます。これを`data-bs-auto-close="outside"`と設定することで「外側がクリックされたら閉じるが、内側をクリックされても閉じない」動作となります。ここまではDropdownsの規定の動作オプションの範囲内です。 https://getbootstrap.jp/docs/5.3/components/dropdowns/#%E8%87%AA%E5%8B%95%E3%81%A7%E9%96%89%E3%81%98%E3%82%8B
+[^6]: デフォルト動作は「ドロップダウンリストの内外のいづれかがクリックされたら閉じる」であり属性`data-bs-auto-close="true"`が設定されます。これを`data-bs-auto-close="outside"`と設定することで「外側がクリックされたら閉じるが、内側をクリックされても閉じない」動作となります。ここまではDropdownsの規定の動作オプションの範囲内です。 https://getbootstrap.jp/docs/5.3/components/dropdowns/#%E8%87%AA%E5%8B%95%E3%81%A7%E9%96%89%E3%81%98%E3%82%8B
 
 ```vue
 <script setup>
@@ -417,11 +411,8 @@ onMounted(()=>{
 ### 例2-2: ドロップダウンリスト（Dropdowns）
 
 
-次の例では、ドロップダウン自体の動作はカスタムしませんが、その際のイベントをフックして
-関連する処理を実行する（途中に割り込ませる）方法を説明します。
-この場合は、Dropdownsインスタンスを取得する必要はありませんが、
-動作を割り込ませる対象の要素を特定する必要があるため、
-先の例と同様にVueのref属性を用いて直接に要素を指定する方法で実装しています。
+次の例では、ドロップダウン自体の動作はカスタムしませんが、その際のイベントをフックして関連する処理を実行する（途中に割り込ませる）方法を説明します。
+この場合は、Dropdownsインスタンスを取得する必要はありませんが、動作を割り込ませる対象の要素を特定する必要があるため、先の例と同様にVueのref属性を用いて直接に要素を指定する方法で実装しています。
 
 
 ```vue
@@ -433,6 +424,9 @@ const elemDropdownList2Parent = useTemplateRef('refDropdownListParent');
 const _listenerHiddenBsDropdown = (event) => {
     console.log('hidden.bs.dropdown', event);
     debugMsgDropdownCustom2.value = 'ドロップダウンリストが閉じられました。';
+    setTimeout(() => {
+        debugMsgDropdownCustom2.value = '';
+    }, 3000);
 };
 
 onMounted(()=>{
@@ -441,7 +435,8 @@ onMounted(()=>{
         _listenerHiddenBsDropdown
     );
 });
-onBeforeUnmount(() => { // https://ja.vuejs.org/api/composition-api-lifecycle#onunmounted
+onBeforeUnmount(() => { 
+    // https://ja.vuejs.org/api/composition-api-lifecycle#onunmounted
     // https://vueuse.org/core/useEventListener/ を使えば、umount時のこの考慮は
     // 不要となるが、そのためだけにimportするほどでもない、ので自前で実装する。
     elemDropdownList2Parent.value.removeEventListener(
@@ -478,7 +473,7 @@ onBeforeUnmount(() => { // https://ja.vuejs.org/api/composition-api-lifecycle#on
 </template>
 ```
 
-
+以上です。
 
 
 

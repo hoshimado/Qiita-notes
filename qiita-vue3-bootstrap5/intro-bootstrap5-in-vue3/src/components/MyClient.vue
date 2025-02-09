@@ -51,6 +51,9 @@ const elemDropdownList2Parent = useTemplateRef('refDropdownListParent');
 const _listenerHiddenBsDropdown = (event) => {
     console.log('hidden.bs.dropdown', event);
     debugMsgDropdownCustom2.value = 'ドロップダウンリストが閉じられました。';
+    setTimeout(() => {
+        debugMsgDropdownCustom2.value = '';
+    }, 3000);
 };
 
 onMounted(()=>{
@@ -66,7 +69,8 @@ onMounted(()=>{
         _listenerHiddenBsDropdown
     );
 });
-onBeforeUnmount(() => { // https://ja.vuejs.org/api/composition-api-lifecycle#onunmounted
+onBeforeUnmount(() => {
+    // https://ja.vuejs.org/api/composition-api-lifecycle#onunmounted
     // https://vueuse.org/core/useEventListener/ を使えば、umount時のこの考慮は
     // 不要となるが、そのためだけにimportするほどでもない、ので自前で実装する。
     elemDropdownList2Parent.value.removeEventListener(
